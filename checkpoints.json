@@ -1,0 +1,415 @@
+{
+  "checkpoints": [
+    {
+      "name": "Day 1 Checkpoint",
+      "date": "2025-02-13",
+      "description": "Initial stable version with working Encounter, Rights, and Proof sections",
+      "knownIssues": [
+        {
+          "type": "compatibility",
+          "description": "Missing Firefox Map Integration",
+          "impact": "high",
+          "status": "resolved"
+        }
+      ],
+      "protectedComponents": [
+        "src/components/Encounter.tsx",
+        "src/components/EncounterListen.tsx",
+        "src/components/AudioPlayer.tsx",
+        "src/components/EncounterButtons.tsx",
+        "src/components/EncounterSpeak.tsx",
+        "src/components/Rights.tsx",
+        "src/components/Registro.tsx"
+      ],
+      "protectedMigrations": "All migrations up to 20250212182818_ancient_dune.sql",
+      "criticalDependencies": {
+        "@supabase/supabase-js": "^2.39.7",
+        "uuid": "^9.0.1"
+      },
+      "environmentVariables": [
+        "VITE_SUPABASE_URL",
+        "VITE_SUPABASE_ANON_KEY",
+        "VITE_ELEVENLABS_API_KEY",
+        "VITE_GOOGLE_MAPS_API_KEY"
+      ],
+      "features": {
+        "encounter": {
+          "status": "stable",
+          "capabilities": [
+            "Speech-to-text translation",
+            "Pre-recorded audio responses",
+            "Real-time audio processing",
+            "Bilingual support"
+          ]
+        },
+        "rights": {
+          "status": "stable",
+          "capabilities": [
+            "Constitutional rights information",
+            "Immigration rights guidance",
+            "Bilingual content",
+            "Case law references",
+            "Expandable sections"
+          ]
+        },
+        "registro": {
+          "status": "stable",
+          "capabilities": [
+            "Audio recording",
+            "Recording storage",
+            "Recording playback",
+            "Location tracking",
+            "Session management",
+            "Recording sharing"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Firefox Compatibility Fix",
+      "date": "2025-02-13",
+      "description": "Fixed map marker dialog and color coding issues in Firefox",
+      "knownIssues": [],
+      "protectedComponents": [
+        "src/components/Map.tsx"
+      ],
+      "criticalDependencies": {
+        "maplibre-gl": "^3.6.2",
+        "react-map-gl": "^7.1.7"
+      },
+      "features": {
+        "map": {
+          "status": "stable",
+          "capabilities": [
+            "Cross-browser marker placement",
+            "Category selection dialog",
+            "Color-coded markers",
+            "Real-time updates",
+            "Location search",
+            "Marker confirmation"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Pre-Menu Changes",
+      "date": "2025-02-13",
+      "description": "Checkpoint before menu modifications",
+      "knownIssues": [],
+      "protectedComponents": [
+        "src/components/Map.tsx",
+        "src/components/Encounter.tsx",
+        "src/components/Rights.tsx",
+        "src/components/RedCard.tsx",
+        "src/components/Registro.tsx"
+      ],
+      "criticalDependencies": {
+        "@supabase/supabase-js": "^2.39.7",
+        "maplibre-gl": "^3.6.2",
+        "react-map-gl": "^7.1.7",
+        "uuid": "^9.0.1"
+      },
+      "features": {
+        "all": {
+          "status": "stable",
+          "capabilities": [
+            "Supabase integration",
+            "Map functionality",
+            "Audio processing",
+            "Rights information",
+            "Recording system"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Lupe Test Integration",
+      "date": "2025-02-13",
+      "description": "Successfully integrated ElevenLabs conversational AI with Lupe test page",
+      "knownIssues": [],
+      "protectedComponents": [
+        "src/components/LupeTest.tsx",
+        "src/components/Lupe.tsx"
+      ],
+      "criticalDependencies": {
+        "@11labs/client": "^0.0.7",
+        "@11labs/react": "^0.0.7"
+      },
+      "features": {
+        "lupe": {
+          "status": "stable",
+          "capabilities": [
+            "ElevenLabs conversational AI integration",
+            "Real-time voice interaction",
+            "Avatar status indicators",
+            "Microphone permission handling",
+            "Connection state management"
+          ]
+        }
+      }
+    }
+  ],
+  "checkpoints": [
+    {
+      "name": "Marker Aging Fix",
+      "date": "2025-04-02",
+      "description": "Fixed marker aging system and status display",
+      "knownIssues": [],
+      "protectedComponents": [
+        "src/components/Map.tsx",
+        "src/lib/dateUtils.ts",
+        "src/lib/supabase.ts"
+      ],
+      "protectedMigrations": [
+        "20250402030711_black_coral.sql",
+        "20250402031002_scarlet_cell.sql",
+        "20250402031013_maroon_mountain.sql",
+        "20250402032043_noisy_sky.sql",
+        "20250402042204_dry_tooth.sql"
+      ],
+      "criticalDependencies": {
+        "@supabase/supabase-js": "^2.39.7",
+        "maplibre-gl": "^3.6.2",
+        "react-map-gl": "^7.1.7"
+      },
+      "features": {
+        "markerAging": {
+          "status": "stable",
+          "capabilities": [
+            "Automatic marker aging after 24 hours",
+            "Visual status indication through color and opacity",
+            "Proper status text display (Active/Archived)",
+            "Reliable database cleanup triggers",
+            "Optimized database queries and indexes"
+          ]
+        },
+        "markerStatus": {
+          "status": "stable",
+          "capabilities": [
+            "Real-time status updates",
+            "Reliability score calculation",
+            "Confirmation tracking",
+            "Status change history"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Trilingual Support",
+      "date": "2025-04-17",
+      "description": "Added Hindi language support and improved language switching",
+      "knownIssues": [],
+      "protectedComponents": [
+        "src/components/Layout.tsx",
+        "src/components/Rights.tsx",
+        "src/components/Lupe.tsx",
+        "src/components/RedCard.tsx"
+      ],
+      "criticalDependencies": {
+        "@11labs/client": "^0.0.7",
+        "@supabase/supabase-js": "^2.39.7",
+        "react-router-dom": "^6.22.1"
+      },
+      "features": {
+        "languageSupport": {
+          "status": "stable",
+          "capabilities": [
+            "Multilingual interface (EN/ES/ZH/HI)",
+            "Dynamic language switching",
+            "Consistent translations across components",
+            "Language-specific formatting",
+            "Preserved component functionality across languages"
+          ]
+        },
+        "lupeChat": {
+          "status": "stable",
+          "capabilities": [
+            "Multilingual chat interface",
+            "Real-time voice interaction",
+            "Dynamic status indicators",
+            "Error handling in multiple languages",
+            "Accessibility features"
+          ]
+        },
+        "rights": {
+          "status": "stable",
+          "capabilities": [
+            "Multilingual legal information",
+            "Section-based organization",
+            "Case law references",
+            "Constitutional rights",
+            "Immigration guidance"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Hindi Language Added - Day 1",
+      "date": "2025-04-18",
+      "description": "Successfully added Hindi language support across all components",
+      "knownIssues": [],
+      "protectedComponents": [
+        "src/components/Layout.tsx",
+        "src/components/Footer.tsx",
+        "src/components/Rights.tsx",
+        "src/components/RedCard.tsx",
+        "src/components/Lupe.tsx",
+        "src/components/AudioPlayer.tsx"
+      ],
+      "criticalDependencies": {
+        "@supabase/supabase-js": "^2.39.7",
+        "uuid": "^9.0.1",
+        "@11labs/client": "^0.0.7"
+      },
+      "features": {
+        "multilingual": {
+          "status": "stable",
+          "capabilities": [
+            "Support for English, Spanish, Chinese, and Hindi",
+            "Language switching in header",
+            "Translated UI elements",
+            "Translated rights information",
+            "Translated audio statements"
+          ]
+        },
+        "redCard": {
+          "status": "stable",
+          "capabilities": [
+            "Multilingual interface",
+            "Audio recording",
+            "Pre-recorded responses in multiple languages",
+            "Location tracking",
+            "Session management"
+          ]
+        },
+        "rights": {
+          "status": "stable",
+          "capabilities": [
+            "Multilingual legal information",
+            "Constitutional rights in multiple languages",
+            "Immigration guidance",
+            "Case law references"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Arabic Language Added",
+      "date": "2025-04-19",
+      "description": "Added Arabic language support with RTL text direction",
+      "knownIssues": [],
+      "protectedComponents": [
+        "src/components/Layout.tsx",
+        "src/components/Footer.tsx",
+        "src/components/Rights.tsx",
+        "src/components/RedCard.tsx",
+        "src/components/Lupe.tsx",
+        "src/components/AudioPlayer.tsx"
+      ],
+      "criticalDependencies": {
+        "@supabase/supabase-js": "^2.39.7",
+        "uuid": "^9.0.1",
+        "@11labs/client": "^0.0.7"
+      },
+      "features": {
+        "multilingual": {
+          "status": "stable",
+          "capabilities": [
+            "Support for English, Spanish, Chinese, Hindi, and Arabic",
+            "Language switching in header",
+            "Translated UI elements",
+            "Translated rights information",
+            "Translated audio statements",
+            "RTL text support for Arabic"
+          ]
+        },
+        "redCard": {
+          "status": "stable",
+          "capabilities": [
+            "Multilingual interface",
+            "RTL text support",
+            "Audio recording",
+            "Pre-recorded responses in multiple languages",
+            "Location tracking",
+            "Session management"
+          ]
+        },
+        "rights": {
+          "status": "stable",
+          "capabilities": [
+            "Multilingual legal information",
+            "Constitutional rights in multiple languages",
+            "Immigration guidance",
+            "Case law references",
+            "RTL text support for Arabic"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Initial Production Deployment",
+      "date": "2025-04-19",
+      "description": "First stable production deployment with all core features working",
+      "knownIssues": [],
+      "protectedComponents": [
+        "src/components/Map.tsx",
+        "src/components/Rights.tsx",
+        "src/components/RedCard.tsx",
+        "src/components/Lupe.tsx",
+        "src/components/Layout.tsx",
+        "src/components/Footer.tsx",
+        "src/components/AudioPlayer.tsx"
+      ],
+      "criticalDependencies": {
+        "@supabase/supabase-js": "^2.39.7",
+        "@11labs/client": "^0.0.7",
+        "maplibre-gl": "^3.6.2",
+        "react-map-gl": "^7.1.7",
+        "uuid": "^9.0.1"
+      },
+      "features": {
+        "map": {
+          "status": "stable",
+          "capabilities": [
+            "Real-time marker updates",
+            "Marker aging system",
+            "Location search",
+            "University selection",
+            "Category filtering",
+            "Marker confirmation"
+          ]
+        },
+        "rights": {
+          "status": "stable",
+          "capabilities": [
+            "Multilingual content (EN/ES/ZH/HI/AR)",
+            "Constitutional rights information",
+            "Immigration guidance",
+            "Case law references",
+            "RTL support for Arabic"
+          ]
+        },
+        "redCard": {
+          "status": "stable",
+          "capabilities": [
+            "Audio recording",
+            "Pre-recorded responses",
+            "Multilingual interface",
+            "Session management",
+            "Location tracking"
+          ]
+        },
+        "chat": {
+          "status": "stable",
+          "capabilities": [
+            "ElevenLabs AI integration",
+            "Real-time voice interaction",
+            "Multilingual support",
+            "Connection state management",
+            "Error handling"
+          ]
+        }
+      }
+    }
+  ]
+}

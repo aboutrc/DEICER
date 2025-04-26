@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="636.5" height="183.4" viewBox="0 0 636.5 183.4" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .logo-text {
+      fill: #fff;
+      font-family: 'Arial Black', Gadget, sans-serif;
+      font-weight: 900;
+      font-size: 149.2px;
+    }
+  </style>
+  
+  <!-- Main text -->
+  <text class="logo-text" x="45.6" y="160.3">DEICER</text>
+</svg>
