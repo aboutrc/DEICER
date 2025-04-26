@@ -2,8 +2,8 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './database.types';
 import type { Marker, MarkerCategory } from '../types';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Create Supabase client with proper configuration
 export const supabase = createClient<Database>( 
@@ -41,7 +41,7 @@ export const testSupabaseConnection = async (retryCount = 0, maxRetries = 3) => 
   try {
     // Check if credentials exist
     if (!supabaseUrl || !supabaseAnonKey) {
-      console.error('Supabase credentials not found');
+      console.error('Supabase credentials not found', { supabaseUrl, supabaseAnonKey });
       return false;
     }
 
@@ -53,6 +53,7 @@ export const testSupabaseConnection = async (retryCount = 0, maxRetries = 3) => 
       .maybeSingle();
     
     if (error) {
+      console.error('Supabase query error:', error);
       throw error;
     }
 

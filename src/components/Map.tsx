@@ -219,6 +219,7 @@ const MapView = ({ language = 'en', selectedUniversity, onUniversitySelect }: Ma
           <NavigationControl position="top-right" />
           <GeolocateControl
             position="top-right"
+            style={{ marginTop: '80px' }}
             trackUserLocation
             onGeolocate={(e) => {
               setUserLocation({

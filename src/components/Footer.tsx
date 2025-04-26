@@ -11,7 +11,7 @@ const Footer = ({ language, className = '' }: FooterProps) => {
   const t = translations[language || 'en'];
 
   return (
-    <footer className={`bg-[#000E54]/90 backdrop-blur-sm border-t border-gray-800 ${className} ${language === 'ar' ? 'rtl' : 'ltr'}`}>
+    <footer className={`backdrop-blur-sm border-t border-gray-800 ${className} ${language === 'ar' ? 'rtl' : 'ltr'}`}>
       <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-4">
         <div className="flex-1 overflow-hidden whitespace-nowrap">
           <div className="animate-scroll inline-block">

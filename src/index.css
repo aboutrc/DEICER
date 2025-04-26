@@ -401,6 +401,10 @@ elevenlabs-convai {
     z-index: 100 !important;
   }
 
+  .maplibregl-ctrl-top-right {
+    top: 80px !important;
+  }
+
   .maplibregl-ctrl-group {
     margin: 0 !important;
     background-color: white !important;
