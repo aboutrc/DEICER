@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Search } from 'lucide-react';
+import { Search, MapPin } from 'lucide-react';
 import { translations } from '../translations';
+import Modal from './Modal';
+import useModal from '../hooks/useModal';
 
 interface LocationSearchProps {
   onLocationSelect: (lat: number, lng: number) => void;
@@ -17,9 +19,9 @@ interface SearchResult {
 export default function LocationSearch({ onLocationSelect, language = 'en', className = '' }: LocationSearchProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
+  const { isOpen, openModal, closeModal } = useModal(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isOpen, setIsOpen] = useState(false);
 
   const t = translations[language];
 
@@ -41,7 +43,13 @@ export default function LocationSearch({ onLocationSelect, language = 'en', clas
 
       const data = await response.json();
       setResults(data);
-      setIsOpen(true);
+      // Only open modal if we have results
+      if (data.length > 0) {
+        openModal();
+      } else {
+        setError(language === 'es' ? 'No se encontraron resultados' : 
+                language === 'zh' ? '未找到结果' : 'No results found');
+      }
     } catch (err) {
       console.error('Search error:', err);
       setError(t.errors.location);
@@ -54,28 +62,24 @@ export default function LocationSearch({ onLocationSelect, language = 'en', clas
     onLocationSelect(Number(result.lat), Number(result.lon));
     setSearchTerm('');
     setResults([]);
-    setIsOpen(false);
+    closeModal();
   };
 
   return (
     <div className={`relative ${className}`}>
-      <form onSubmit={handleSearch} className="relative">
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder={language === 'es' ? 'Buscar ubicación...' : 
-                       language === 'zh' ? '搜索位置...' : 'Search location...'}
-          className="w-full px-4 py-2 pr-10 bg-black/50 text-gray-100 rounded-lg border border-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-lg"
-        />
-        <button
-          type="submit"
-          className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300"
-          disabled={isLoading}
-        >
-          <Search size={20} />
-        </button>
-      </form>
+      <button
+        onClick={openModal}
+        className="w-full px-3 py-2 bg-gray-800/90 backdrop-blur-sm text-gray-100 rounded-lg shadow-md flex items-center justify-center hover:bg-gray-700 transition-colors"
+      >
+        <MapPin size={20} className="mr-2" />
+        <span>
+          {language === 'es' ? 'Buscar' : 
+           language === 'zh' ? '搜索' : 
+           language === 'hi' ? 'खोज' : 
+           language === 'ar' ? 'بحث' : 
+           'Search'}
+        </span>
+      </button>
 
       {error && (
         <div className="absolute top-full mt-2 w-full">
@@ -85,19 +89,89 @@ export default function LocationSearch({ onLocationSelect, language = 'en', clas
         </div>
       )}
 
-      {isOpen && results.length > 0 && (
-        <div className="absolute top-full mt-2 w-full bg-black/90 backdrop-blur-md rounded-lg shadow-xl border border-gray-700 max-h-60 overflow-y-auto z-50">
-          {results.map((result, index) => (
+      <Modal
+        isOpen={isOpen}
+        onClose={closeModal}
+        title={
+          <span className="flex items-center">
+            <MapPin className="mr-2" size={24} />
+            {language === 'es' ? 'Buscar Ubicación' : 
+             language === 'zh' ? '搜索位置' : 
+             language === 'hi' ? 'स्थान खोजें' : 
+             language === 'ar' ? 'البحث عن موقع' : 
+             'Search Location'}
+          </span>
+        }
+      >
+        {/* Search Box */}
+        <div className="p-4 border-b border-gray-700 bg-gray-900">
+          <form onSubmit={handleSearch} className="relative">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder={language === 'es' ? 'Buscar ubicación...' : 
+                          language === 'zh' ? '搜索位置...' : 'Search location...'}
+              className="w-full px-4 py-3 pr-10 bg-gray-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-700 placeholder-gray-500"
+              autoFocus
+            />
             <button
-              key={index}
-              onClick={() => handleSelect(result)}
-              className="w-full px-4 py-2 text-left text-gray-100 hover:bg-gray-800/80 focus:outline-none focus:bg-gray-800/80 border-b border-gray-700 last:border-b-0"
+              type="submit"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300"
+              disabled={isLoading}
             >
-              {result.display_name}
+              {isLoading ? (
+                <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <Search size={20} />
+              )}
             </button>
-          ))}
+          </form>
+          
+          {error && (
+            <div className="mt-2 bg-red-900/50 text-red-100 px-3 py-2 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
         </div>
-      )}
+        
+        {/* Results List */}
+        <div className="p-2 bg-gray-900">
+          {results.length > 0 ? (
+            <div className="divide-y divide-gray-700">
+              {results.map((result, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleSelect(result)}
+                  className="w-full px-4 py-3 text-left text-gray-100 hover:bg-gray-800/80 focus:outline-none focus:bg-gray-800/80 rounded-lg transition-colors flex items-start gap-2"
+                >
+                  <MapPin size={18} className="text-blue-400 flex-shrink-0 mt-1" />
+                  <span>{result.display_name}</span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-400">
+              {isLoading ? (
+                <div className="flex flex-col items-center">
+                  <div className="w-8 h-8 border-2 border-gray-400 border-t-transparent rounded-full animate-spin mb-2"></div>
+                  <span>
+                    {language === 'es' ? 'Buscando...' : 
+                     language === 'zh' ? '搜索中...' : 
+                     'Searching...'}
+                  </span>
+                </div>
+              ) : (
+                <span>
+                  {language === 'es' ? 'Busca una ubicación para ver resultados' : 
+                   language === 'zh' ? '搜索位置以查看结果' : 
+                   'Search for a location to see results'}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 }

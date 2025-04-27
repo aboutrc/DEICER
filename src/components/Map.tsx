@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Map as MapGL, Marker, Popup, NavigationControl, GeolocateControl } from 'react-map-gl/maplibre';
 import { MapPin, Plus, AlertTriangle, Database, CheckCircle, Lightbulb as Lighthouse, Bell } from 'lucide-react';
 import { translations } from '../translations';
+import Modal from './Modal';
 import { supabase, isSupabaseConfigured, testSupabaseConnection, subscribeToIceMarkers } from '../lib/supabase';
 import type { Marker as MarkerType, MarkerCategory } from '../types';
 import LocationSearch from './LocationSearch';
@@ -219,7 +220,7 @@ const MapView = ({ language = 'en', selectedUniversity, onUniversitySelect }: Ma
           <NavigationControl position="top-right" />
           <GeolocateControl
             position="top-right"
-            style={{ marginTop: '80px' }}
+            style={{ marginTop: '120px' }}
             trackUserLocation
             onGeolocate={(e) => {
               setUserLocation({
@@ -347,7 +348,10 @@ const MapView = ({ language = 'en', selectedUniversity, onUniversitySelect }: Ma
         </MapGL>
       </div>
       
-      <div className="fixed bottom-32 left-4 z-[1001] space-y-2 w-72">
+      <div className="fixed left-4 top-[60%] transform -translate-y-1/2 z-[1001] space-y-2">
+      </div>
+      
+      <div className="fixed left-4 bottom-32 z-[1001] space-y-2">
         <div className="flex flex-col gap-2">
           <button
             className={`w-36 px-4 py-2 rounded-lg shadow-md flex items-center justify-center ${
@@ -361,21 +365,17 @@ const MapView = ({ language = 'en', selectedUniversity, onUniversitySelect }: Ma
             {isAddingMarker ? t.clickToPlace : 'Add Mark'}
           </button>
 
-          <div className="relative">
-            <LocationSearch
-              onLocationSelect={handleLocationSelect}
-              language={language as 'en' | 'es' | 'zh'}
-              className="w-full bg-black/80 backdrop-blur-md shadow-lg border border-gray-700/50"
-            />
-          </div>
+          <LocationSearch
+            onLocationSelect={handleLocationSelect}
+            language={language as 'en' | 'es' | 'zh'}
+            className="w-36"
+          />
           
-          <div className="mt-2 w-full">
-            <UniversitySelector 
-              onSelect={onUniversitySelect}
-              language={language} 
-              className="w-full bg-black/80 backdrop-blur-md shadow-lg border border-gray-700/50"
-            />
-          </div>
+          <UniversitySelector 
+            onSelect={onUniversitySelect}
+            language={language} 
+            className="w-36"
+          />
         </div>
       </div>
       
@@ -413,12 +413,15 @@ const MapView = ({ language = 'en', selectedUniversity, onUniversitySelect }: Ma
       
       {/* Category selection dialog */}
       {showCategoryDialog && pendingMarker && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[1100] flex items-center justify-center p-4">
-          <div className="bg-gray-900 rounded-lg border border-gray-700 p-6 w-full max-w-md">
-            <h3 className="text-xl font-bold text-white mb-4">
-              {t.selectCategory || 'Select Category'}
-            </h3>
-            
+        <Modal
+          isOpen={showCategoryDialog && pendingMarker !== null}
+          onClose={() => {
+            setShowCategoryDialog(false);
+            setPendingMarker(null);
+          }}
+          title={t.selectCategory || 'Select Category'}
+        >
+          <div className="p-6">
             <div className="space-y-3 mb-6">
               <button
                 onClick={() => setSelectedCategory('ice')}
@@ -479,7 +482,7 @@ const MapView = ({ language = 'en', selectedUniversity, onUniversitySelect }: Ma
               </button>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

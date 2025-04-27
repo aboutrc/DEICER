@@ -9,7 +9,7 @@ interface ProtectProps {
   language?: 'en' | 'es' | 'zh' | 'hi' | 'ar';
 }
 
-const Protect: React.FC<ProtectProps> = ({ language = 'es' }) => {
+const Protect: React.FC<ProtectProps> = ({ language = 'en' }) => {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [translation, setTranslation] = useState('');
@@ -26,6 +26,7 @@ const Protect: React.FC<ProtectProps> = ({ language = 'es' }) => {
   // Initialize OpenAI client
   useEffect(() => {
     const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+    console.log("API Key available:", !!apiKey);
     if (apiKey) {
       openaiRef.current = new OpenAI({
         apiKey,
@@ -33,6 +34,7 @@ const Protect: React.FC<ProtectProps> = ({ language = 'es' }) => {
       });
       setIsApiConfigured(true);
     } else {
+      console.error("OpenAI API key not found in environment variables");
       setIsApiConfigured(false);
       setError('OpenAI API key not configured. Please add VITE_OPENAI_API_KEY to your environment variables.');
     }
@@ -187,14 +189,6 @@ const Protect: React.FC<ProtectProps> = ({ language = 'es' }) => {
   return (
     <div className={`min-h-screen bg-gray-900 ${language === 'ar' ? 'rtl' : 'ltr'}`}>
       <div className="max-w-2xl mx-auto px-6 py-8 space-y-8">
-        {/* Title */}
-        <h1 className="text-3xl font-bold text-white text-center">
-          {language === 'es' ? 'Proteger' : 
-           language === 'zh' ? '保护' : 
-           language === 'hi' ? 'सुरक्षा' : 
-           language === 'ar' ? 'حماية' : 'Protect'}
-        </h1>
-        
         {/* API Configuration Error */}
         {!isApiConfigured && (
           <div className="bg-red-900/50 text-red-100 px-4 py-3 rounded-lg flex items-center gap-2">

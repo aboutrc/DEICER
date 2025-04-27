@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Map, CreditCard, Shield, Scale, User } from 'lucide-react';
-import { ChevronDown } from 'lucide-react';
 import type { University } from '../lib/universities';
 import Footer from './Footer';
 
@@ -40,15 +39,14 @@ const Layout: React.FC<LayoutProps> = ({ children, language, onLanguageChange, o
   const handleLanguageToggle = () => {
     // Find current language index
     const currentIndex = languageOrder.indexOf(language);
-    // Get next language (or cycle back to first)
     const nextLanguage = languageOrder[(currentIndex + 1) % languageOrder.length];
     onLanguageChange(nextLanguage);
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-900">
+    <div className="relative min-h-screen flex flex-col bg-gray-900">
       {/* Fixed Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-black text-white py-4 px-6 flex items-center justify-between border-b border-gray-800">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-black text-white py-5 px-6 flex items-center justify-between border-b border-gray-800">
         <div className="flex items-center gap-4 flex-1 h-full">
           <h1 className="deicer-title">DEICER</h1> 
         </div>
@@ -68,13 +66,13 @@ const Layout: React.FC<LayoutProps> = ({ children, language, onLanguageChange, o
       </header>
 
       {/* Navigation Menu */}
-      <nav className="fixed top-[calc(3.5rem)] md:top-[calc(3.75rem)] left-0 right-0 z-40 bg-black text-white nav-menu">
+      <nav className="fixed top-[calc(4rem+5px)] md:top-[calc(3.75rem+5px)] left-0 right-0 z-40 bg-black text-white nav-menu">
         <div className="grid grid-cols-5 divide-x divide-gray-800">
           {menuItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
-              className={`flex flex-col items-center justify-center py-2 h-full transition-colors nav-menu-item ${
+              className={`flex flex-col items-center justify-center py-3 h-full transition-colors nav-menu-item ${
                 location.pathname === item.path ? 'bg-gray-800' : 'hover:bg-gray-900'
               }`}
             >
@@ -86,7 +84,7 @@ const Layout: React.FC<LayoutProps> = ({ children, language, onLanguageChange, o
       </nav>
 
       {/* Main Content */}
-      <main className="content-wrapper pt-[7.5rem] md:pt-[8rem] pb-16 min-h-[calc(100vh-10rem)]">
+      <main className="flex-1 pt-[6.5rem] md:pt-[8.25rem] pb-16">
         {children}
       </main>
 
