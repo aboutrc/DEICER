@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Map, CreditCard, Shield, Scale, User } from 'lucide-react';
 import type { University } from '../lib/universities';
 import Footer from './Footer';
+import { supabase } from '../lib/supabase';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -35,6 +36,26 @@ const Layout: React.FC<LayoutProps> = ({ children, language, onLanguageChange, o
   const location = useLocation();
   const navigate = useNavigate();
   const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  
+  React.useEffect(() => {
+    // Check if user is logged in
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsLoggedIn(!!session);
+    };
+    
+    checkAuth();
+    
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsLoggedIn(!!session);
+    });
+    
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   const handleLanguageToggle = () => {
     // Find current language index
@@ -48,7 +69,9 @@ const Layout: React.FC<LayoutProps> = ({ children, language, onLanguageChange, o
       {/* Fixed Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-black text-white py-5 px-6 flex items-center justify-between border-b border-gray-800">
         <div className="flex items-center gap-4 flex-1 h-full">
-          <h1 className="deicer-title">DEICER</h1> 
+          <Link to="/" className="hover:opacity-80 transition-opacity">
+            <h1 className="deicer-title">DEICER</h1>
+          </Link>
         </div>
         
         {/* Language toggle button moved to far right */}

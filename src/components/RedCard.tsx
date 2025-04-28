@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { translations } from '../translations';
 import { supabase, testSupabaseConnection } from '../lib/supabase';
 import { v4 as uuidv4 } from 'uuid';
-import { redCardStatements } from '../lib/audioStatements';
+import { redCardStatements } from '../lib/audioStatements'; 
 import AudioPlayer from './AudioPlayer';
 import { Play, Square, AlertTriangle, Loader2, Mic } from 'lucide-react';
 
@@ -31,11 +31,11 @@ const RedCard = ({ language }: RedCardProps) => {
   const [isRecording, setIsRecording] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [sessionId] = useState(() => uuidv4());
   const [isSaving, setIsSaving] = useState(false);
   const t = translations[language || 'en'];
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const audioContextRef = useRef<AudioContext | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -45,6 +45,30 @@ const RedCard = ({ language }: RedCardProps) => {
   const [isCheckingConnection, setIsCheckingConnection] = useState(true);
   const [currentlyPlaying, setCurrentlyPlaying] = useState<number | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  
+  // This effect will handle recording state when audio is playing
+  useEffect(() => {
+    // We don't need to pause recording when audio plays
+    // Instead, we'll let both continue simultaneously to capture the audio playback
+    console.log('Audio playing state changed:', isAudioPlaying);
+  }, [isAudioPlaying]);
+  
+  // This effect will pause recording when audio is playing and resume after
+  useEffect(() => {
+    if (isAudioPlaying && mediaRecorderRef.current && isRecording) {
+      // Temporarily pause recording while audio plays
+      if (mediaRecorderRef.current.state === 'recording') {
+        mediaRecorderRef.current.pause();
+        console.log('Recording paused while audio plays');
+      }
+    } else if (!isAudioPlaying && mediaRecorderRef.current && isRecording) {
+      // Resume recording after audio finishes
+      if (mediaRecorderRef.current.state === 'paused') {
+        mediaRecorderRef.current.resume();
+        console.log('Recording resumed after audio finished');
+      }
+    }
+  }, [isAudioPlaying, isRecording]);
   
   const getSupportedMimeType = () => {
     const types = [
@@ -157,53 +181,15 @@ const RedCard = ({ language }: RedCardProps) => {
     };
   }, []);
 
-  const checkMicrophonePermission = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true
-        }
-      });
-      
-      stream.getTracks().forEach(track => track.stop());
-      setHasPermission(true);
-      setError(null);
-      return true;
-    } catch (err: any) {
-      console.error('Microphone permission error:', err);
-      setHasPermission(false);
-      
-      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-        setError(language === 'es'
-          ? 'Acceso al micrófono denegado. Por favor, cierre y vuelva a abrir la página, luego intente de nuevo.'
-          : 'Microphone access denied. Please close and reopen the page, then try again.');
-      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
-        setError(language === 'es'
-          ? 'No se encontró micrófono. Por favor, conecte un micrófono e intente de nuevo.'
-          : 'No microphone found. Please connect a microphone and try again.');
-      } else {
-        setError(language === 'es'
-          ? 'No se puede acceder al micrófono. Por favor, verifique la configuración de su dispositivo.'
-          : 'Unable to access microphone. Please check your device settings.');
-      }
-      return false;
-    }
-  };
-
   const startRecording = async () => {
-    const hasAccess = await checkMicrophonePermission();
-    if (!hasAccess) return;
-
     try {
+      setError(null);
+      
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           echoCancellation: false,
-          noiseSuppression: false,
-          autoGainControl: false,
-          channelCount: 1,
-          sampleRate: 44100
+          noiseSuppression: false, 
+          autoGainControl: false
         } 
       });
 
@@ -215,8 +201,7 @@ const RedCard = ({ language }: RedCardProps) => {
       }
 
       const mediaRecorder = new MediaRecorder(stream, {
-        mimeType,
-        audioBitsPerSecond: 128000
+        mimeType
       });
       
       mediaRecorderRef.current = mediaRecorder;
@@ -242,10 +227,28 @@ const RedCard = ({ language }: RedCardProps) => {
       setIsRecording(true);
       setError(null);
     } catch (err) {
-      console.error('Recording error:', err);
-      setError(language === 'es'
-        ? 'Error al iniciar la grabación. Por favor, verifique los permisos del micrófono.'
-        : 'Error starting recording. Please check microphone permissions.');
+      console.error('Microphone access error:', err);
+      
+      if (err instanceof Error) {
+        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+          setError(language === 'es'
+            ? 'Acceso al micrófono denegado. Por favor, cierre y vuelva a abrir la página, luego intente de nuevo.'
+            : 'Microphone access denied. Please close and reopen the page, then try again.');
+        } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+          setError(language === 'es'
+            ? 'No se encontró micrófono. Por favor, conecte un micrófono e intente de nuevo.'
+            : 'No microphone found. Please connect a microphone and try again.');
+        } else {
+          setError(language === 'es'
+            ? 'No se puede acceder al micrófono. Por favor, verifique la configuración de su dispositivo.'
+            : 'Unable to access microphone. Please check your device settings.');
+        }
+      } else {
+        setError(language === 'es'
+          ? 'Error al iniciar la grabación. Por favor, verifique los permisos del micrófono.'
+          : 'Error starting recording. Please check microphone permissions.');
+      }
+      
       setIsRecording(false);
     }
   };
@@ -394,8 +397,12 @@ const RedCard = ({ language }: RedCardProps) => {
       audioRef.current.src = url;
       audioRef.current.volume = 1.0;
       
+      // Set audio playing state
+      setIsAudioPlaying(true);
+      
       audioRef.current.onended = () => {
         setCurrentlyPlaying(null);
+        setIsAudioPlaying(false);
         URL.revokeObjectURL(url);
       };
 
@@ -498,14 +505,16 @@ const RedCard = ({ language }: RedCardProps) => {
         <div className="bg-[#660000] backdrop-blur-sm rounded-lg p-6">
           <h2 className="text-xl font-bold text-white mb-6">
             {language === 'hi' ? 'पूर्व-रिकॉर्ड की गई प्रतिक्रियाएँ' :
-             language === 'es' ? 'Respuestas Pregrabadas' : 
-             language === 'zh' ? '预录制回应' : 
+             language === 'es' ? 'Respuestas Pregrabadas' :
+             language === 'zh' ? '预录制回应' :
+             language === 'ar' ? 'ردود مسجلة مسبقًا' :
              'Pre-recorded Responses'}
           </h2>
-          <AudioPlayer 
+          <AudioPlayer
             speakerMode={true} 
             language={language}
             statements={redCardStatements}
+            onPlayStateChange={setIsAudioPlaying}
           />
         </div>
 
@@ -541,6 +550,9 @@ const RedCard = ({ language }: RedCardProps) => {
                     <div className="flex items-center gap-2">
                       <audio
                         src={recording.public_url}
+                        onPlay={() => setIsAudioPlaying(true)}
+                        onEnded={() => setIsAudioPlaying(false)}
+                        onPause={() => setIsAudioPlaying(false)}
                         controls
                         className="flex-1 h-8"
                         onError={(e) => {

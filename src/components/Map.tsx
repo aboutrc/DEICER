@@ -77,6 +77,64 @@ const MapView = ({ language = 'en', selectedUniversity, onUniversitySelect }: Ma
     }));
   }, []);
 
+  // Function to save a new marker - Moved before the JSX return
+  const handleSaveMarker = async () => {
+    if (!pendingMarker) return;
+    
+    try {
+      setError(null);
+      
+      const { data, error } = await supabase
+        .from('markers')
+        .insert({
+          latitude: pendingMarker.lat,
+          longitude: pendingMarker.lng,
+          category: selectedCategory,
+          title: `${selectedCategory.toUpperCase()} Sighting`,
+          description: `${selectedCategory.toUpperCase()} sighting reported at ${new Date().toLocaleString()}`,
+          active: true,
+          user_id: null // Anonymous marker
+        })
+        .select();
+      
+      if (error) {
+        console.error('Error saving marker:', error);
+        throw error;
+      }
+      
+      if (data && data.length > 0) {
+        // Add the new marker to the local state
+        const newMarker: MarkerType = {
+          id: data[0].id,
+          position: { lat: data[0].latitude, lng: data[0].longitude },
+          category: data[0].category as MarkerCategory,
+          createdAt: new Date(data[0].created_at),
+          active: data[0].active,
+          lastConfirmed: data[0].last_confirmed ? new Date(data[0].last_confirmed) : undefined,
+          reliability_score: data[0].reliability_score,
+          negative_confirmations: data[0].negative_confirmations
+        };
+        
+        setMarkers(prev => [newMarker, ...prev]);
+        
+        // Show success feedback
+        setFeedback({
+          message: 'Marker added successfully',
+          type: 'success'
+        });
+        
+        // Clear feedback after 3 seconds
+        setTimeout(() => setFeedback(null), 3000);
+      }
+    } catch (err) {
+      console.error('Error saving marker:', err);
+      setError('Failed to save marker. Please try again.');
+    } finally {
+      setShowCategoryDialog(false);
+      setPendingMarker(null);
+    }
+  };
+
   // Initialize map and fetch markers
   useEffect(() => {
     const checkSupabaseConnection = async () => {
@@ -263,7 +321,7 @@ const MapView = ({ language = 'en', selectedUniversity, onUniversitySelect }: Ma
                   className={`drop-shadow-md transition-colors ${
                     marker.category === 'ice'
                       ? 'text-blue-500'
-                      : marker.category === 'police'
+                      : marker.category === 'observer'
                       ? 'text-red-500'
                       : 'text-yellow-500'
                   }`}
@@ -290,7 +348,7 @@ const MapView = ({ language = 'en', selectedUniversity, onUniversitySelect }: Ma
                       className={`w-3 h-3 rounded-full mr-2 ${
                         selectedMarker.category === 'ice'
                           ? 'bg-blue-500'
-                          : selectedMarker.category === 'police'
+                          : selectedMarker.category === 'observer'
                           ? 'bg-red-500'
                           : 'bg-yellow-500'
                       }`}
@@ -436,18 +494,6 @@ const MapView = ({ language = 'en', selectedUniversity, onUniversitySelect }: Ma
               </button>
               
               <button
-                onClick={() => setSelectedCategory('police')}
-                className={`w-full px-4 py-3 rounded-lg flex items-center ${
-                  selectedCategory === 'police'
-                    ? 'bg-red-600 text-white'
-                    : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                }`}
-              >
-                <div className="w-4 h-4 bg-red-500 rounded-full mr-3"></div>
-                <span>Police</span>
-              </button>
-              
-              <button
                 onClick={() => setSelectedCategory('observer')}
                 className={`w-full px-4 py-3 rounded-lg flex items-center ${
                   selectedCategory === 'observer'
@@ -471,12 +517,10 @@ const MapView = ({ language = 'en', selectedUniversity, onUniversitySelect }: Ma
                 Cancel
               </button>
               <button
-                onClick={() => {
-                  // Handle marker creation
-                  setShowCategoryDialog(false);
-                  setPendingMarker(null);
-                }}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                onClick={() => {
+                  handleSaveMarker();
+                }}
               >
                 Save
               </button>

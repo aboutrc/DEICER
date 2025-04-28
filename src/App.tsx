@@ -8,6 +8,11 @@ import Info from './components/Info';
 import InfoEditor from './components/InfoEditor';
 import Lupe from './components/Lupe';
 import About from './components/About';
+import Donate from './components/Donate';
+import DonateSuccess from './components/DonateSuccess';
+import Login from './components/Login';
+import Signup from './components/Signup';
+import UserProfile from './components/UserProfile';
 import type { University } from './lib/universities';
 import { translations } from './translations';
 
@@ -82,6 +87,27 @@ function App() {
         <Route path="/about" element={
           <Layout language={language} onLanguageChange={handleLanguageChange}>
             <About language={language} />
+          </Layout>
+        } />
+        <Route path="/donate" element={
+          <Layout language={language} onLanguageChange={handleLanguageChange}>
+            <Donate language={language} />
+          </Layout>
+        } />
+        <Route path="/donate-success" element={
+          <Layout language={language} onLanguageChange={handleLanguageChange}>
+            <DonateSuccess language={language} />
+          </Layout>
+        } />
+        <Route path="/login" element={
+          <Login language={language} />
+        } />
+        <Route path="/signup" element={
+          <Signup language={language} />
+        } />
+        <Route path="/profile" element={
+          <Layout language={language} onLanguageChange={handleLanguageChange}>
+            <UserProfile language={language} />
           </Layout>
         } />
       </Routes>

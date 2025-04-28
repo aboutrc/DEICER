@@ -2,6 +2,23 @@ export const translations = {
   ar: {
     protect: {
       title: 'حماية',
+    donate: {
+      title: 'تبرع',
+      subtitle: 'تبرعك يساعدنا في الاستمرار بتقديم هذه الخدمة مجانًا',
+      donateButton: 'تبرع',
+      donateNow: 'تبرع الآن',
+      loading: 'جاري المعالجة...',
+      error: 'حدث خطأ. يرجى المحاولة مرة أخرى.',
+      loginRequired: 'يرجى تسجيل الدخول للتبرع',
+      loginButton: 'تسجيل الدخول',
+      signupButton: 'إنشاء حساب',
+      thankYou: 'شكرًا لدعمك!',
+      benefits: 'تبرعك يساعدنا في:',
+      benefit1: 'الحفاظ على الخدمة مجانية للجميع',
+      benefit2: 'تحسين وإضافة ميزات جديدة',
+      benefit3: 'التوسع إلى المزيد من اللغات والمناطق',
+      benefit4: 'صيانة خوادمنا وبنيتنا التحتية'
+    },
       realTimeTranslation: 'الترجمة في الوقت الحقيقي',
       startListening: 'ابدأ الاستماع',
       stopListening: 'توقف عن الاستماع',
@@ -177,6 +194,23 @@ export const translations = {
   en: {
     protect: {
       title: 'Protect',
+    donate: {
+      title: 'Support DEICER',
+      subtitle: 'Your donation helps us continue to provide this service for free',
+      donateButton: 'Donate',
+      donateNow: 'Donate Now',
+      loading: 'Processing...',
+      error: 'An error occurred. Please try again.',
+      loginRequired: 'Please log in to donate',
+      loginButton: 'Log In',
+      signupButton: 'Sign Up',
+      thankYou: 'Thank you for your support!',
+      benefits: 'Your donation helps us:',
+      benefit1: 'Keep the service free for everyone',
+      benefit2: 'Improve and add new features',
+      benefit3: 'Expand to more languages and regions',
+      benefit4: 'Maintain our servers and infrastructure'
+    },
       realTimeTranslation: 'Real-time Translation',
       startListening: 'Start Listening',
       stopListening: 'Stop Listening',
@@ -188,7 +222,7 @@ export const translations = {
       placePhone: 'Place your phone near the door to listen and translate English to your language.'
     },
     footer: {
-      message: 'This website is <span class="text-yellow-400">free to use</span>, <span class="text-yellow-400">anonymous</span>, and you <span class="text-yellow-400">don\'t need to sign in</span>.'
+      message: 'This website is <span class="text-yellow-400">free to use</span>, <span class="text-yellow-400">anonymous</span>, and you <span class="text-yellow-400">do not need to sign in</span>.'
     },
     redCard: {
       title: 'Digital Red Card',
@@ -317,6 +351,23 @@ export const translations = {
   hi: {
     protect: {
       title: 'सुरक्षा',
+    donate: {
+      title: 'DEICER का समर्थन करें',
+      subtitle: 'आपका दान हमें यह सेवा मुफ्त में प्रदान करने में मदद करता है',
+      donateButton: 'दान करें',
+      donateNow: 'अभी दान करें',
+      loading: 'प्रोसेसिंग...',
+      error: 'एक त्रुटि हुई। कृपया पुनः प्रयास करें।',
+      loginRequired: 'दान करने के लिए कृपया लॉग इन करें',
+      loginButton: 'लॉग इन',
+      signupButton: 'साइन अप',
+      thankYou: 'आपके समर्थन के लिए धन्यवाद!',
+      benefits: 'आपका दान हमें मदद करता है:',
+      benefit1: 'सेवा को सभी के लिए मुफ्त रखने में',
+      benefit2: 'सुधार करने और नई सुविधाएँ जोड़ने में',
+      benefit3: 'अधिक भाषाओं और क्षेत्रों में विस्तार करने में',
+      benefit4: 'हमारे सर्वर और बुनियादी ढांचे को बनाए रखने में'
+    },
       realTimeTranslation: 'रीयल-टाइम अनुवाद',
       startListening: 'सुनना शुरू करें',
       stopListening: 'सुनना बंद करें',
@@ -476,6 +527,23 @@ export const translations = {
   es: {
     protect: {
       title: 'Proteger',
+    donate: {
+      title: 'Apoya a DEICER',
+      subtitle: 'Tu donación nos ayuda a seguir ofreciendo este servicio gratuitamente',
+      donateButton: 'Donar',
+      donateNow: 'Donar Ahora',
+      loading: 'Procesando...',
+      error: 'Ocurrió un error. Por favor, inténtalo de nuevo.',
+      loginRequired: 'Por favor, inicia sesión para donar',
+      loginButton: 'Iniciar Sesión',
+      signupButton: 'Registrarse',
+      thankYou: '¡Gracias por tu apoyo!',
+      benefits: 'Tu donación nos ayuda a:',
+      benefit1: 'Mantener el servicio gratuito para todos',
+      benefit2: 'Mejorar y añadir nuevas funciones',
+      benefit3: 'Expandirnos a más idiomas y regiones',
+      benefit4: 'Mantener nuestros servidores e infraestructura'
+    },
       realTimeTranslation: 'Traducción en Tiempo Real',
       startListening: 'Comenzar a Escuchar',
       stopListening: 'Detener Escucha',
@@ -487,7 +555,7 @@ export const translations = {
       placePhone: 'Coloca tu teléfono cerca de la puerta para escuchar y traducir el inglés a español.'
     },
     footer: {
-      message: 'Este sitio web es <span class="text-yellow-400">gratuito</span>, <span class="text-yellow-400">anónimo</span> y <span class="text-yellow-400">no necesitas iniciar sesión</span>.'
+      message: 'Este sitio web es <span class="text-yellow-400">gratuito</span>, <span class="text-yellow-400">anónimo</span> y <span class="text-yellow-400">no necesita iniciar sesión</span>.'
     },
     redCard: {
       title: 'Tarjeta Roja Digital',
@@ -640,6 +708,23 @@ export const translations = {
   zh: {
     protect: {
       title: '保护',
+    donate: {
+      title: '支持 DEICER',
+      subtitle: '您的捐款帮助我们继续免费提供此服务',
+      donateButton: '捐赠',
+      donateNow: '立即捐赠',
+      loading: '处理中...',
+      error: '发生错误。请重试。',
+      loginRequired: '请登录后捐赠',
+      loginButton: '登录',
+      signupButton: '注册',
+      thankYou: '感谢您的支持！',
+      benefits: '您的捐款帮助我们：',
+      benefit1: '保持服务对所有人免费',
+      benefit2: '改进并添加新功能',
+      benefit3: '扩展到更多语言和地区',
+      benefit4: '维护我们的服务器和基础设施'
+    },
       realTimeTranslation: '实时翻译',
       startListening: '开始收听',
       stopListening: '停止收听',
@@ -651,7 +736,7 @@ export const translations = {
       placePhone: '将手机放在门附近，听取并将英语翻译成中文。'
     },
     footer: {
-      message: '本网站<span class="text-yellow-400">免费使用</span>，<span class="text-yellow-400">匿名</span>，且<span class="text-yellow-400">无需登录</span>。'
+      message: '本网站<span class="text-yellow-400">免费使用</span>，<span class="text-yellow-400">匿名</span>，且<span class="text-yellow-400">不需要登录</span>。'
     },
     redCard: {
       title: '数字红卡',

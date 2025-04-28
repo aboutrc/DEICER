@@ -8,6 +8,7 @@ interface AudioPlayerProps {
   useRedCardStatements?: boolean;
   statements?: typeof myhomeStatements;
   language?: 'en' | 'es' | 'zh' | 'hi' | 'ar';
+  onPlayStateChange?: (isPlaying: boolean) => void;
 }
 
 const AudioPlayer = ({ 
@@ -15,7 +16,8 @@ const AudioPlayer = ({
   useMyhomeStatements = false,
   useRedCardStatements = false,
   statements: customStatements,
-  language = 'en' 
+  language = 'en',
+  onPlayStateChange
 }: AudioPlayerProps) => {
   const [currentPlaying, setCurrentPlaying] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -42,6 +44,7 @@ const AudioPlayer = ({
         if (audioRef.current) {
           audioRef.current.pause();
           audioRef.current.currentTime = 0;
+          if (onPlayStateChange) onPlayStateChange(false);
         }
         setCurrentPlaying(null);
         return;
@@ -64,14 +67,17 @@ const AudioPlayer = ({
 
       audioRef.current.onended = () => {
         setCurrentPlaying(null);
+        if (onPlayStateChange) onPlayStateChange(false);
       };
 
       await audioRef.current.play();
+      if (onPlayStateChange) onPlayStateChange(true);
       setCurrentPlaying(text);
     } catch (err) {
       console.error('Speech generation error:', err);
       setError(err instanceof Error ? err.message : 'Failed to generate speech. Please try again.');
       setCurrentPlaying(null);
+      if (onPlayStateChange) onPlayStateChange(false);
     } finally {
       setIsGenerating(false);
     }

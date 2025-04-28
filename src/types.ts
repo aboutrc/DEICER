@@ -1,4 +1,4 @@
-export type MarkerCategory = 'ice' | 'police' | 'observer';
+export type MarkerCategory = 'ice' | 'observer';
 
 export interface Marker {
   id: string;
