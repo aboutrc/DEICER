@@ -1,9 +1,10 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Map as MapGL, Marker, Popup, NavigationControl, GeolocateControl } from 'react-map-gl/maplibre';
-import { MapPin, Plus, AlertTriangle, Database, CheckCircle, Lightbulb as Lighthouse, Bell } from 'lucide-react';
+import { MapPin, Plus, AlertTriangle, CheckCircle, Bell, ScanEye } from 'lucide-react';
 import { translations } from '../translations';
 import Modal from './Modal';
-import { supabase, isSupabaseConfigured, testSupabaseConnection, subscribeToIceMarkers } from '../lib/supabase';
+import { supabase, isSupabaseConfigured, subscribeToIceMarkers, testSupabaseConnection } from '../lib/supabase';
 import type { Marker as MarkerType, MarkerCategory } from '../types';
 import LocationSearch from './LocationSearch';
 import maplibregl from 'maplibre-gl';
@@ -59,14 +60,14 @@ const MapView = ({ language = 'en', selectedUniversity, onUniversitySelect }: Ma
   const [showCategoryDialog, setShowCategoryDialog] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
-  const [isSupabaseConnected, setIsSupabaseConnected] = useState(false);
+  const [isSupabaseConnected, setIsSupabaseConnected] = useState<boolean | null>(null);
   const mapRef = useRef<any>(null);
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
   const fetchMarkersTimeoutRef = useRef<number | null>(null);
   const isAddingMarkerRef = useRef(false);
   const t = translations[language];
 
-  // Add the handleLocationSelect function
   const handleLocationSelect = useCallback((lat: number, lng: number) => {
     setViewState(prev => ({
       ...prev,
@@ -77,9 +78,15 @@ const MapView = ({ language = 'en', selectedUniversity, onUniversitySelect }: Ma
     }));
   }, []);
 
-  // Function to save a new marker - Moved before the JSX return
   const handleSaveMarker = async () => {
     if (!pendingMarker) return;
+    
+    if (!isSupabaseConnected) {
+      setError('Database connection not available');
+      setShowCategoryDialog(false);
+      setPendingMarker(null);
+      return;
+    }
     
     try {
       setError(null);
@@ -93,7 +100,7 @@ const MapView = ({ language = 'en', selectedUniversity, onUniversitySelect }: Ma
           title: `${selectedCategory.toUpperCase()} Sighting`,
           description: `${selectedCategory.toUpperCase()} sighting reported at ${new Date().toLocaleString()}`,
           active: true,
-          user_id: null // Anonymous marker
+          user_id: null
         })
         .select();
       
@@ -103,7 +110,6 @@ const MapView = ({ language = 'en', selectedUniversity, onUniversitySelect }: Ma
       }
       
       if (data && data.length > 0) {
-        // Add the new marker to the local state
         const newMarker: MarkerType = {
           id: data[0].id,
           position: { lat: data[0].latitude, lng: data[0].longitude },
@@ -117,13 +123,11 @@ const MapView = ({ language = 'en', selectedUniversity, onUniversitySelect }: Ma
         
         setMarkers(prev => [newMarker, ...prev]);
         
-        // Show success feedback
         setFeedback({
           message: 'Marker added successfully',
           type: 'success'
         });
         
-        // Clear feedback after 3 seconds
         setTimeout(() => setFeedback(null), 3000);
       }
     } catch (err) {
@@ -135,25 +139,109 @@ const MapView = ({ language = 'en', selectedUniversity, onUniversitySelect }: Ma
     }
   };
 
-  // Initialize map and fetch markers
-  useEffect(() => {
-    const checkSupabaseConnection = async () => {
+  const fetchMarkers = async (retryCount = 0, maxRetries = 3) => {
+    try {
+      const isConfigured = isSupabaseConfigured();
+      console.log('Fetch markers - Supabase configured:', isConfigured);
+      
+      if (!isConfigured) {
+        console.warn('Supabase not configured, skipping marker fetch');
+        setError(t.errors?.databaseConnection || 'Database connection not available');
+        return;
+      }
+
       const isConnected = await testSupabaseConnection();
+      console.log('Fetch markers - Supabase connection test result:', isConnected);
       setIsSupabaseConnected(isConnected);
       
-      if (isConnected) {
-        fetchMarkers();
+      if (!isConnected) {
+        throw new Error('Failed to connect to database');
+      }
+
+      console.log('Fetching markers...');
+      const response = await supabase
+        .from('markers')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      const { data, error } = response;
+      console.log('Supabase query response:', {
+        status: response.status,
+        statusText: response.statusText,
+        hasData: Boolean(data),
+        dataCount: data?.length || 0,
+        hasError: Boolean(error)
+      });
+      
+      if (error) {
+        console.error('Error fetching markers:', {
+          message: error.message,
+          code: error.code,
+          details: error.details
+        });
+        throw error;
+      }
+      
+      if (data) {
+        console.log(`Successfully fetched ${data.length} markers`);
+        const formattedMarkers: MarkerType[] = data.map(marker => ({
+          id: marker.id,
+          position: { lat: marker.latitude, lng: marker.longitude },
+          category: marker.category as MarkerCategory,
+          createdAt: new Date(marker.created_at),
+          active: marker.active,
+          lastConfirmed: marker.last_confirmed ? new Date(marker.last_confirmed) : undefined,
+          reliability_score: marker.reliability_score,
+          negative_confirmations: marker.negative_confirmations
+        }));
+        
+        setMarkers(formattedMarkers);
+        setError(null);
+      }
+    } catch (err) {
+      console.error('Error fetching markers:', err);
+      
+      if (retryCount < maxRetries) {
+        const delay = Math.min(1000 * Math.pow(2, retryCount), 8000);
+        console.log(`Retrying in ${delay}ms... (Attempt ${retryCount + 1} of ${maxRetries})`);
+        
+        setError(`Connecting to database... (Attempt ${retryCount + 1} of ${maxRetries})`);
+        
+        setTimeout(() => {
+          fetchMarkers(retryCount + 1, maxRetries);
+        }, delay);
+      } else {
+        setError(t.errors?.fetchMarkers || 'Failed to load markers. Please try again later.');
+      }
+    }
+  };
+
+  useEffect(() => {
+    const checkSupabaseConnection = async () => {
+      const isConfigured = isSupabaseConfigured();
+      console.log('Initial Supabase configuration check:', isConfigured);
+      
+      if (isConfigured) {
+        const isConnected = await testSupabaseConnection();
+        console.log('Initial Supabase connection test result:', isConnected);
+        setIsSupabaseConnected(isConnected);
+        
+        if (isConnected) {
+          fetchMarkers();
+        } else {
+          setError('Could not connect to database. Please try again later.');
+        }
+      } else {
+        setError('Database connection not available. Please check your configuration.');
       }
     };
     
-    // Get user's location
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
           setUserLocation({ lat: latitude, lng: longitude });
           
-          // Only set view state if no university is selected
           if (!selectedUniversity) {
             setViewState(prev => ({
               ...prev,
@@ -172,18 +260,16 @@ const MapView = ({ language = 'en', selectedUniversity, onUniversitySelect }: Ma
     
     checkSupabaseConnection();
     
-    // Set up subscription to real-time marker updates
     let unsubscribe: (() => void) | null = null;
-    
-    if (userLocation) {
+
+    if (userLocation && isSupabaseConnected && isSupabaseConfigured()) {
       unsubscribe = subscribeToIceMarkers(
         userLocation.lat,
         userLocation.lng,
-        50, // 50 mile radius
+        50,
         (newMarker) => {
           setMarkers(prev => [...prev, newMarker]);
           
-          // Show alert for new marker
           setAlertMessage(`New ${newMarker.category.toUpperCase()} marker reported nearby`);
           setShowAlert(true);
           setTimeout(() => setShowAlert(false), 5000);
@@ -199,7 +285,6 @@ const MapView = ({ language = 'en', selectedUniversity, onUniversitySelect }: Ma
     };
   }, [userLocation, selectedUniversity]);
   
-  // Update view when university is selected
   useEffect(() => {
     if (selectedUniversity) {
       const { latitude, longitude } = selectedUniversity.geofence_coordinates.center;
@@ -212,46 +297,26 @@ const MapView = ({ language = 'en', selectedUniversity, onUniversitySelect }: Ma
       }));
     }
   }, [selectedUniversity]);
-  
-  // Fetch markers from database
-  const fetchMarkers = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('markers')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      
-      if (data) {
-        const formattedMarkers: MarkerType[] = data.map(marker => ({
-          id: marker.id,
-          position: { lat: marker.latitude, lng: marker.longitude },
-          category: marker.category as MarkerCategory,
-          createdAt: new Date(marker.created_at),
-          active: marker.active,
-          lastConfirmed: marker.last_confirmed ? new Date(marker.last_confirmed) : undefined,
-          reliability_score: marker.reliability_score,
-          negative_confirmations: marker.negative_confirmations
-        }));
-        
-        setMarkers(formattedMarkers);
-      }
-    } catch (err) {
-      console.error('Error fetching markers:', err);
-      setError(t.errors?.fetchMarkers || 'Failed to load markers');
-    }
-  };
 
   return (
     <div className="h-screen w-screen relative">
-      {/* Map container */}
       <div className="absolute inset-0 bg-gray-900">
         {mapLoaded ? null : (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-900 z-10">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
               <p className="text-gray-300">{t.loading || 'Loading maps...'}</p>
+              {!isSupabaseConnected && (
+                <p className="text-yellow-300 mt-2">Database connection unavailable. Some features may be limited.</p>
+              )}
+              {isSupabaseConnected === false && (
+                <button 
+                  onClick={() => fetchMarkers(0, 3)} 
+                  className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Retry Connection
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -274,12 +339,14 @@ const MapView = ({ language = 'en', selectedUniversity, onUniversitySelect }: Ma
           }}
           style={{ width: '100%', height: '100%' }}
         >
-          {/* Navigation controls */}
           <NavigationControl position="top-right" />
           <GeolocateControl
             position="top-right"
             style={{ marginTop: '120px' }}
-            trackUserLocation
+            trackUserLocation={true}
+            showUserHeading={true}
+            showUserLocation={true}
+            showAccuracyCircle={true}
             onGeolocate={(e) => {
               setUserLocation({
                 lat: e.coords.latitude,
@@ -288,7 +355,6 @@ const MapView = ({ language = 'en', selectedUniversity, onUniversitySelect }: Ma
             }}
           />
           
-          {/* User location marker */}
           {userLocation && (
             <Marker
               longitude={userLocation.lng}
@@ -302,7 +368,6 @@ const MapView = ({ language = 'en', selectedUniversity, onUniversitySelect }: Ma
             </Marker>
           )}
           
-          {/* Display all markers */}
           {markers.map(marker => (
             <Marker
               key={marker.id}
@@ -316,21 +381,23 @@ const MapView = ({ language = 'en', selectedUniversity, onUniversitySelect }: Ma
               className={marker.active ? '' : 'marker-archived'}
             >
               <div className="relative cursor-pointer">
-                <MapPin
-                  size={36}
-                  className={`drop-shadow-md transition-colors ${
-                    marker.category === 'ice'
-                      ? 'text-blue-500'
-                      : marker.category === 'observer'
-                      ? 'text-red-500'
-                      : 'text-yellow-500'
-                  }`}
-                />
+                {marker.category === 'observer' ? (
+                  <ScanEye
+                    size={36}
+                    className="drop-shadow-md transition-colors text-blue-500"
+                  />
+                ) : (
+                  <img 
+                    src="/police-officer.svg" 
+                    alt="ICE" 
+                    className="w-9 h-9 drop-shadow-md"
+                    style={{ filter: "invert(21%) sepia(100%) saturate(7414%) hue-rotate(353deg) brightness(94%) contrast(128%)" }}
+                  />
+                )}
               </div>
             </Marker>
           ))}
           
-          {/* Selected marker popup */}
           {selectedMarker && (
             <Popup
               longitude={selectedMarker.position.lng}
@@ -347,10 +414,10 @@ const MapView = ({ language = 'en', selectedUniversity, onUniversitySelect }: Ma
                     <div
                       className={`w-3 h-3 rounded-full mr-2 ${
                         selectedMarker.category === 'ice'
-                          ? 'bg-blue-500'
-                          : selectedMarker.category === 'observer'
                           ? 'bg-red-500'
-                          : 'bg-yellow-500'
+                          : selectedMarker.category === 'observer'
+                          ? 'bg-blue-500'
+                          : 'bg-blue-500'
                       }`}
                     ></div>
                     <span className="text-white font-medium uppercase text-sm">
@@ -384,7 +451,6 @@ const MapView = ({ language = 'en', selectedUniversity, onUniversitySelect }: Ma
                   <button
                     className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-3 rounded text-sm font-medium"
                     onClick={() => {
-                      // Handle confirmation
                       setSelectedMarker(null);
                     }}
                   >
@@ -393,7 +459,6 @@ const MapView = ({ language = 'en', selectedUniversity, onUniversitySelect }: Ma
                   <button
                     className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-3 rounded text-sm font-medium"
                     onClick={() => {
-                      // Handle not present
                       setSelectedMarker(null);
                     }}
                   >
@@ -429,7 +494,12 @@ const MapView = ({ language = 'en', selectedUniversity, onUniversitySelect }: Ma
             className="w-36"
           />
           
-          <UniversitySelector 
+          <button
+            onClick={() => navigate('/debug')} 
+            className="hidden"
+          />
+
+          <UniversitySelector
             onSelect={onUniversitySelect}
             language={language} 
             className="w-36"
@@ -437,7 +507,6 @@ const MapView = ({ language = 'en', selectedUniversity, onUniversitySelect }: Ma
         </div>
       </div>
       
-      {/* Error message */}
       {error && (
         <div className="fixed top-24 left-1/2 transform -translate-x-1/2 z-[1002] bg-red-900/90 backdrop-blur-sm text-white px-4 py-3 rounded-lg shadow-lg flex items-center">
           <AlertTriangle size={20} className="mr-2" />
@@ -445,7 +514,6 @@ const MapView = ({ language = 'en', selectedUniversity, onUniversitySelect }: Ma
         </div>
       )}
       
-      {/* Success/error feedback */}
       {feedback && (
         <div
           className={`fixed top-24 left-1/2 transform -translate-x-1/2 z-[1002] ${
@@ -461,7 +529,6 @@ const MapView = ({ language = 'en', selectedUniversity, onUniversitySelect }: Ma
         </div>
       )}
       
-      {/* New marker alert */}
       {showAlert && (
         <div className="fixed top-24 left-1/2 transform -translate-x-1/2 z-[1002] bg-blue-900/90 backdrop-blur-sm text-white px-4 py-3 rounded-lg shadow-lg flex items-center animate-fade-in">
           <Bell size={20} className="mr-2" />
@@ -469,7 +536,6 @@ const MapView = ({ language = 'en', selectedUniversity, onUniversitySelect }: Ma
         </div>
       )}
       
-      {/* Category selection dialog */}
       {showCategoryDialog && pendingMarker && (
         <Modal
           isOpen={showCategoryDialog && pendingMarker !== null}
@@ -483,26 +549,31 @@ const MapView = ({ language = 'en', selectedUniversity, onUniversitySelect }: Ma
             <div className="space-y-3 mb-6">
               <button
                 onClick={() => setSelectedCategory('ice')}
-                className={`w-full px-4 py-3 rounded-lg flex items-center ${
+                className={`w-full px-4 py-3 rounded-lg flex items-center gap-3 ${
                   selectedCategory === 'ice'
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-red-600 text-white'
                     : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                 }`}
               >
-                <div className="w-4 h-4 bg-blue-500 rounded-full mr-3"></div>
-                <span>ICE</span>
+                <img 
+                  src="/police-officer.svg" 
+                  alt="ICE" 
+                  className="w-5 h-5"
+                  style={{ filter: "invert(21%) sepia(100%) saturate(7414%) hue-rotate(353deg) brightness(94%) contrast(128%)" }}
+                />
+                <span className="font-medium">ICE</span>
               </button>
               
               <button
                 onClick={() => setSelectedCategory('observer')}
-                className={`w-full px-4 py-3 rounded-lg flex items-center ${
+                className={`w-full px-4 py-3 rounded-lg flex items-center gap-3 ${
                   selectedCategory === 'observer'
-                    ? 'bg-yellow-600 text-white'
+                    ? 'bg-blue-600 text-white'
                     : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                 }`}
               >
-                <div className="w-4 h-4 bg-yellow-500 rounded-full mr-3"></div>
-                <span>Observer</span>
+                <ScanEye size={18} className="text-blue-500" />
+                <span className="font-medium">Observer</span>
               </button>
             </div>
             

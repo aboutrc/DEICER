@@ -16,7 +16,7 @@ const Protect: React.FC<ProtectProps> = ({ language = 'en' }) => {
   const [translation, setTranslation] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
-  const [isApiConfigured, setIsApiConfigured] = useState(false);
+  const [isApiConfigured, setIsApiConfigured] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const isMobile = useIsMobile();
@@ -152,11 +152,13 @@ const Protect: React.FC<ProtectProps> = ({ language = 'en' }) => {
 
       let transcription;
       try {
+        console.log('Sending audio to OpenAI for transcription...');
         transcription = await openaiRef.current.audio.transcriptions.create({
           file,
           model: 'whisper-1',
           language: 'en'
         });
+        console.log('Transcription received:', transcription.text);
       } catch (error) {
         console.warn('First transcription attempt failed, retrying with WAV fallback.');
         const fallbackBlob = await reencodeToWav(audioBlob);
@@ -170,6 +172,7 @@ const Protect: React.FC<ProtectProps> = ({ language = 'en' }) => {
 
       setTranscript(transcription.text);
 
+      console.log('Sending transcription to OpenAI for translation...');
       const completion = await openaiRef.current.chat.completions.create({
         model: 'gpt-4o',
         messages: [
@@ -190,6 +193,7 @@ const Protect: React.FC<ProtectProps> = ({ language = 'en' }) => {
       });
 
       const translatedText = completion.choices[0].message.content;
+      console.log('Translation received:', translatedText);
       setTranslation(translatedText || '');
     } catch (err) {
       console.error('Error processing audio:', err);

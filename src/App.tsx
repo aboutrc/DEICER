@@ -15,6 +15,7 @@ import Signup from './components/Signup';
 import UserProfile from './components/UserProfile';
 import type { University } from './lib/universities';
 import { translations } from './translations';
+import { isSupabaseConfigured } from './lib/supabase';
 
 function App() {
   const [language, setLanguage] = React.useState<'en' | 'es' | 'zh' | 'hi' | 'ar'>(
@@ -24,6 +25,16 @@ function App() {
       : localStorage.getItem('preferredLanguage')) as 'en' | 'es' | 'zh' | 'hi' | 'ar' || 'en'
   );
   const [selectedUniversity, setSelectedUniversity] = React.useState<University | null>(null);
+
+  // Initialize Supabase connection on app load
+  React.useEffect(() => {
+    const initSupabase = async () => {
+      const isConfigured = isSupabaseConfigured();
+      console.log('Supabase configuration check:', isConfigured ? 'Configured' : 'Not configured');
+    };
+    
+    initSupabase();
+  }, []);
 
   const handleLanguageChange = (newLanguage: 'en' | 'es' | 'zh' | 'hi' | 'ar') => {
     setLanguage(newLanguage);

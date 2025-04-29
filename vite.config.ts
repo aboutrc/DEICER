@@ -6,8 +6,8 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'prompt',
-      includeAssets: ['deicer3.png', 'audio/*.mp3'],
+      registerType: 'autoUpdate',
+      includeAssets: ['audio/*.mp3', 'logo.svg'],
       manifest: {
         name: 'DEICER : DEI Community Engagement Reporter',
         short_name: 'DEICER',
@@ -20,15 +20,15 @@ export default defineConfig({
         scope: '/',
         icons: [
           {
-            src: '/deicer3.png',
+            src: '/logo.svg',
             sizes: '192x192',
-            type: 'image/png',
+            type: 'image/svg+xml',
             purpose: 'any maskable'
           },
           {
-            src: '/deicer3.png',
+            src: '/logo.svg',
             sizes: '512x512',
-            type: 'image/png',
+            type: 'image/svg+xml',
             purpose: 'any maskable'
           }
         ],
@@ -36,22 +36,49 @@ export default defineConfig({
         shortcuts: [
           {
             name: 'Map',
-            url: '/map',
-            icons: [{ src: '/deicer3.png', sizes: '192x192' }]
+            url: '/'
           }
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,mp3}'],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,mp3,jpg,jpeg}'],
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/api\.mapbox\.com\//,
+            urlPattern: /^https:\/\/api\.maptiler\.com/,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'mapbox-cache',
+              cacheName: 'maptiler-cache',
               expiration: {
                 maxEntries: 50,
                 maxAgeSeconds: 60 * 60 * 24 // 24 hours
+              }
+            }
+          },
+          {
+            urlPattern: /^https:\/\/.*\.supabase\.co/,
+            handler: 'NetworkFirst',
+            options: { networkTimeoutSeconds: 10 }
+          },
+          {
+            urlPattern: /^https:\/\/images\.unsplash\.com/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'image-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 * 7 // 7 days
+              }
+            }
+          },
+          {
+            urlPattern: /^https:\/\/api\.openai\.com\//,
+            handler: 'NetworkOnly',
+            options: {
+              backgroundSync: {
+                name: 'openai-queue',
+                options: {
+                  maxRetentionTime: 24 * 60 // Retry for up to 24 hours (specified in minutes)
+                }
               }
             }
           }
@@ -60,11 +87,12 @@ export default defineConfig({
         sourcemap: true
       },
       devOptions: {
-        enabled: false // Disable PWA in development
+        enabled: false // Disable PWA in development to avoid caching issues
       }
     })
   ],
-  server: {
+  server: { 
+    host: '0.0.0.0',
     cors: {
       origin: '*',
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -94,8 +122,13 @@ export default defineConfig({
     }
   },
   optimizeDeps: {
-    exclude: ['lucide-react'],
-    include: ['maplibre-gl', 'react-map-gl']
+    include: ['maplibre-gl', 'react-map-gl'],
+    exclude: ['lucide-react']
+  },
+  define: {
+    'process.env': {},
+    __SUPABASE_URL__: JSON.stringify(process.env.VITE_SUPABASE_URL),
+    __SUPABASE_ANON_KEY__: JSON.stringify(process.env.VITE_SUPABASE_ANON_KEY)
   },
   resolve: {
     alias: {
@@ -104,5 +137,9 @@ export default defineConfig({
   },
   build: {
     sourcemap: true
+  },
+  preview: {
+    port: 4173,
+    host: true
   }
 });

@@ -2,8 +2,17 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './database.types';
 import type { Marker, MarkerCategory } from '../types';
 
+// Get Supabase credentials from environment variables with debugging
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+// Log Supabase configuration for debugging
+console.log('Supabase configuration details:', { 
+  url: supabaseUrl,
+  keyLength: supabaseAnonKey ? supabaseAnonKey.length : 0,
+  keyFirstChars: supabaseAnonKey ? supabaseAnonKey.substring(0, 10) + '...' : 'undefined',
+  keyLastChars: supabaseAnonKey ? '...' + supabaseAnonKey.substring(supabaseAnonKey.length - 10) : 'undefined'
+});
 
 // Create Supabase client with proper configuration
 export const supabase = createClient<Database>( 
@@ -33,50 +42,81 @@ export const supabase = createClient<Database>(
 
 // Helper function to check if Supabase is properly configured
 export const isSupabaseConfigured = () => {
-  return Boolean(supabaseUrl && supabaseAnonKey);
+  const configured = Boolean(supabaseUrl) && Boolean(supabaseAnonKey);
+  console.log('Supabase configured check:', {
+    configured,
+    hasUrl: Boolean(supabaseUrl),
+    hasKey: Boolean(supabaseAnonKey)
+  });
+  return configured;
 };
 
 // Helper function to test Supabase connection with retries
 export const testSupabaseConnection = async (retryCount = 0, maxRetries = 3) => {
   try {
     // Check if credentials exist
-    if (!supabaseUrl || !supabaseAnonKey) {
-      console.error('Supabase credentials not found', { supabaseUrl, supabaseAnonKey });
+    if (!isSupabaseConfigured()) {
+      console.error('Supabase credentials not found');
       return false;
     }
+
+    // Log connection attempt for debugging
+    console.log('Attempting to connect to Supabase (attempt ' + (retryCount + 1) + '/' + (maxRetries + 1) + '):', { 
+      url: supabaseUrl, 
+      attempt: retryCount + 1,
+      maxRetries,
+      timestamp: new Date().toISOString()
+    });
 
     // Test connection with a simple query
     const { data, error } = await supabase
       .from('markers')
       .select('id')
-      .limit(1)
-      .maybeSingle();
+      .limit(1);
     
     if (error) {
-      console.error('Supabase query error:', error);
+      console.error('Supabase query error (attempt ' + (retryCount + 1) + '):', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint
+      });
       throw error;
     }
 
+    console.log('Supabase connection successful', { 
+      dataReceived: Boolean(data),
+      timestamp: new Date().toISOString()
+    });
     return true;
   } catch (err) {
     console.error('Supabase connection error:', {
       attempt: retryCount + 1,
       error: err instanceof Error ? err.message : err,
-      url: supabaseUrl
+      errorObject: err,
+      timestamp: new Date().toISOString()
     });
     
     // Retry on network errors with exponential backoff
     if (retryCount < maxRetries && err instanceof Error && 
         (err.message.includes('Failed to fetch') || 
-         err.message.includes('NetworkError') ||
-         err.message.includes('upstream connect error'))) {
+         err.message.includes('NetworkError') || 
+         err.message.includes('upstream connect error') || 
+         err.message.includes('TypeError') ||
+         err.message.includes('Network request failed'))) {
       const delay = Math.min(1000 * Math.pow(2, retryCount), 8000); // Exponential backoff capped at 8s
+      console.log(`Retrying in ${delay}ms...`);
       await new Promise(resolve => setTimeout(resolve, delay));
-      return testSupabaseConnection(retryCount + 1, maxRetries);
+      try {
+        return await testSupabaseConnection(retryCount + 1, maxRetries);
+      } catch (retryError) {
+        console.error('Retry failed:', retryError);
+        return false;
+      }
     }
     
     return false;
-  };
+  }
 };
 
 // Calculate distance between two points in kilometers
@@ -108,6 +148,11 @@ export const subscribeToIceMarkers = (
   radiusMiles: number,
   callback: (marker: Marker) => void
 ): (() => void) => {
+  if (!isSupabaseConfigured()) {
+    console.warn('Missing parameters for subscribeToIceMarkers');
+    return () => {}; // Return empty function if parameters are missing
+  }
+  
   const radiusKm = milesToKm(radiusMiles);
   
   // Subscribe to the markers table for inserts
@@ -123,6 +168,7 @@ export const subscribeToIceMarkers = (
       },
       (payload) => {
         const newMarker = payload.new;
+        if (!newMarker) return;
         
         // Calculate distance between user and new marker
         const distance = calculateDistance(
@@ -133,7 +179,7 @@ export const subscribeToIceMarkers = (
         );
         
         // If within radius, trigger callback
-        if (distance <= radiusKm) {
+        if (distance <= radiusKm && callback) {
           const marker: Marker = {
             id: newMarker.id,
             position: { lat: newMarker.latitude, lng: newMarker.longitude },
@@ -150,6 +196,8 @@ export const subscribeToIceMarkers = (
   
   // Return unsubscribe function
   return () => {
-    supabase.removeChannel(subscription);
+    if (subscription) {
+      supabase.removeChannel(subscription);
+    }
   };
 };
