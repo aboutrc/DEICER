@@ -369,6 +369,7 @@ const MapView = ({ language = 'en', selectedUniversity, onUniversitySelect }: Ma
           )}
           
           {markers.map(marker => (
+            marker.active && (
             <Marker
               key={marker.id}
               longitude={marker.position.lng}
@@ -378,7 +379,6 @@ const MapView = ({ language = 'en', selectedUniversity, onUniversitySelect }: Ma
                 e.originalEvent.stopPropagation();
                 setSelectedMarker(marker);
               }}
-              className={marker.active ? '' : 'marker-archived'}
             >
               <div className="relative cursor-pointer">
                 {marker.category === 'observer' ? (
@@ -396,6 +396,7 @@ const MapView = ({ language = 'en', selectedUniversity, onUniversitySelect }: Ma
                 )}
               </div>
             </Marker>
+            )
           ))}
           
           {selectedMarker && (
