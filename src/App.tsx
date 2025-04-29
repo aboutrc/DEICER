@@ -1,21 +1,31 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
-import MapView from './components/Map';
-import RedCard from './components/RedCard';
-import Protect from './components/Protect';
-import Info from './components/Info';
-import InfoEditor from './components/InfoEditor';
-import Lupe from './components/Lupe';
-import About from './components/About';
-import Donate from './components/Donate';
-import DonateSuccess from './components/DonateSuccess';
-import Login from './components/Login';
-import Signup from './components/Signup';
-import UserProfile from './components/UserProfile';
+
+// Lazy load components
+const MapView = lazy(() => import('./components/Map'));
+const RedCard = lazy(() => import('./components/RedCard'));
+const Protect = lazy(() => import('./components/Protect'));
+const Info = lazy(() => import('./components/Info'));
+const InfoEditor = lazy(() => import('./components/InfoEditor'));
+const Lupe = lazy(() => import('./components/Lupe'));
+const About = lazy(() => import('./components/About'));
+const Donate = lazy(() => import('./components/Donate'));
+const DonateSuccess = lazy(() => import('./components/DonateSuccess'));
+const Login = lazy(() => import('./components/Login'));
+const Signup = lazy(() => import('./components/Signup'));
+const UserProfile = lazy(() => import('./components/UserProfile'));
+
 import type { University } from './lib/universities';
 import { translations } from './translations';
 import { isSupabaseConfigured } from './lib/supabase';
+
+// Loading component
+const LoadingFallback = () => (
+  <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+    <div className="text-white text-xl">Loading...</div>
+  </div>
+);
 
 function App() {
   const [language, setLanguage] = React.useState<'en' | 'es' | 'zh' | 'hi' | 'ar'>(
@@ -56,72 +66,98 @@ function App() {
 
   return (
     <Router>
-      <Routes>
-        <Route path="/" element={
-          <Layout 
-            language={language} 
-            onLanguageChange={handleLanguageChange}
-            onUniversitySelect={handleUniversitySelect}
-          >
-            <MapView 
+      <Suspense fallback={<LoadingFallback />}>
+        <Routes>
+          <Route path="/" element={
+            <Layout 
               language={language} 
-              selectedUniversity={selectedUniversity}
+              onLanguageChange={handleLanguageChange}
               onUniversitySelect={handleUniversitySelect}
-            />
-          </Layout>
-        } />
-        <Route path="/card" element={
-          <Layout language={language} onLanguageChange={handleLanguageChange}>
-            <RedCard language={language} />
-          </Layout>
-        } />
-        <Route path="/protect" element={
-          <Layout language={language} onLanguageChange={handleLanguageChange}>
-            <Protect language={language} />
-          </Layout>
-        } />
-        <Route path="/info" element={
-          <Layout language={language} onLanguageChange={handleLanguageChange}>
-            <Info language={language} />
-          </Layout>
-        } />
-        <Route path="/info-editor" element={
-          <Layout language={language} onLanguageChange={handleLanguageChange}>
-            <InfoEditor language={language} />
-          </Layout>
-        } />
-        <Route path="/lupe" element={
-          <Layout language={language} onLanguageChange={handleLanguageChange}>
-            <Lupe language={language} />
-          </Layout>
-        } />
-        <Route path="/about" element={
-          <Layout language={language} onLanguageChange={handleLanguageChange}>
-            <About language={language} />
-          </Layout>
-        } />
-        <Route path="/donate" element={
-          <Layout language={language} onLanguageChange={handleLanguageChange}>
-            <Donate language={language} />
-          </Layout>
-        } />
-        <Route path="/donate-success" element={
-          <Layout language={language} onLanguageChange={handleLanguageChange}>
-            <DonateSuccess language={language} />
-          </Layout>
-        } />
-        <Route path="/login" element={
-          <Login language={language} />
-        } />
-        <Route path="/signup" element={
-          <Signup language={language} />
-        } />
-        <Route path="/profile" element={
-          <Layout language={language} onLanguageChange={handleLanguageChange}>
-            <UserProfile language={language} />
-          </Layout>
-        } />
-      </Routes>
+            >
+              <Suspense fallback={<LoadingFallback />}>
+                <MapView 
+                  language={language} 
+                  selectedUniversity={selectedUniversity}
+                  onUniversitySelect={handleUniversitySelect}
+                />
+              </Suspense>
+            </Layout>
+          } />
+          <Route path="/card" element={
+            <Layout language={language} onLanguageChange={handleLanguageChange}>
+              <Suspense fallback={<LoadingFallback />}>
+                <RedCard language={language} />
+              </Suspense>
+            </Layout>
+          } />
+          <Route path="/protect" element={
+            <Layout language={language} onLanguageChange={handleLanguageChange}>
+              <Suspense fallback={<LoadingFallback />}>
+                <Protect language={language} />
+              </Suspense>
+            </Layout>
+          } />
+          <Route path="/info" element={
+            <Layout language={language} onLanguageChange={handleLanguageChange}>
+              <Suspense fallback={<LoadingFallback />}>
+                <Info language={language} />
+              </Suspense>
+            </Layout>
+          } />
+          <Route path="/info-editor" element={
+            <Layout language={language} onLanguageChange={handleLanguageChange}>
+              <Suspense fallback={<LoadingFallback />}>
+                <InfoEditor language={language} />
+              </Suspense>
+            </Layout>
+          } />
+          <Route path="/lupe" element={
+            <Layout language={language} onLanguageChange={handleLanguageChange}>
+              <Suspense fallback={<LoadingFallback />}>
+                <Lupe language={language} />
+              </Suspense>
+            </Layout>
+          } />
+          <Route path="/about" element={
+            <Layout language={language} onLanguageChange={handleLanguageChange}>
+              <Suspense fallback={<LoadingFallback />}>
+                <About language={language} />
+              </Suspense>
+            </Layout>
+          } />
+          <Route path="/donate" element={
+            <Layout language={language} onLanguageChange={handleLanguageChange}>
+              <Suspense fallback={<LoadingFallback />}>
+                <Donate language={language} />
+              </Suspense>
+            </Layout>
+          } />
+          <Route path="/donate-success" element={
+            <Layout language={language} onLanguageChange={handleLanguageChange}>
+              <Suspense fallback={<LoadingFallback />}>
+                <DonateSuccess language={language} />
+              </Suspense>
+            </Layout>
+          } />
+          <Route path="/login" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <Login language={language} />
+            </Suspense>
+          } />
+          <Route path="/signup" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <Signup language={language} />
+            </Suspense>
+          } />
+          <Route path="/profile" element={
+            <Layout language={language} onLanguageChange={handleLanguageChange}>
+              <Suspense fallback={<LoadingFallback />}>
+                <UserProfile language={language} />
+              </Suspense>
+            </Layout>
+          } />
+        </Routes>
+      </Suspense>
     </Router>
   );
 }

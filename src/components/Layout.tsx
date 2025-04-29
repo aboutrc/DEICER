@@ -70,7 +70,7 @@ const Layout: React.FC<LayoutProps> = ({ children, language, onLanguageChange, o
       <header className="fixed top-0 left-0 right-0 z-50 bg-black text-white py-5 px-6 flex items-center justify-between border-b border-gray-800">
         <div className="flex items-center gap-4 flex-1 h-full">
           <Link to="/" className="hover:opacity-80 transition-opacity">
-            <h1 className="deicer-title">DEICER</h1>
+            <img src="/deicerlogo.png" alt="DEICER" className="h-8 md:h-12" />
           </Link>
         </div>
         
@@ -89,7 +89,7 @@ const Layout: React.FC<LayoutProps> = ({ children, language, onLanguageChange, o
       </header>
 
       {/* Navigation Menu */}
-      <nav className="fixed top-[calc(4rem+5px)] md:top-[calc(3.75rem+5px)] left-0 right-0 z-40 bg-black text-white nav-menu">
+      <nav className="fixed top-[calc(4rem+5px)] md:top-[calc(5.5rem+5px)] left-0 right-0 z-40 bg-black text-white nav-menu">
         <div className="grid grid-cols-5 divide-x divide-gray-800">
           {menuItems.map((item) => (
             <Link
@@ -107,7 +107,7 @@ const Layout: React.FC<LayoutProps> = ({ children, language, onLanguageChange, o
       </nav>
 
       {/* Main Content */}
-      <main className="flex-1 pt-[6.5rem] md:pt-[8.25rem] pb-16">
+      <main className="flex-1 pt-[6.5rem] md:pt-[10.5rem] pb-16">
         {children}
       </main>
 

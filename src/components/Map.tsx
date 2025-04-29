@@ -1,17 +1,22 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Map as MapGL, Marker, Popup, NavigationControl, GeolocateControl } from 'react-map-gl/maplibre';
+import { Map as MapGL, NavigationControl, GeolocateControl } from 'react-map-gl/maplibre';
 import { MapPin, Plus, AlertTriangle, CheckCircle, Bell, ScanEye } from 'lucide-react';
 import { translations } from '../translations';
 import Modal from './Modal';
 import { supabase, isSupabaseConfigured, subscribeToIceMarkers, testSupabaseConnection } from '../lib/supabase';
 import type { Marker as MarkerType, MarkerCategory } from '../types';
-import LocationSearch from './LocationSearch';
 import maplibregl from 'maplibre-gl';
+
+// Lazy load components that aren't needed immediately
+const LocationSearch = React.lazy(() => import('./LocationSearch'));
+const Marker = React.lazy(() => import('react-map-gl/maplibre').then(module => ({ default: module.Marker })));
+const Popup = React.lazy(() => import('react-map-gl/maplibre').then(module => ({ default: module.Popup })));
+
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { isWithinLast24Hours } from '../lib/dateUtils';
-import UniversitySelector from './UniversitySelector';
+const UniversitySelector = React.lazy(() => import('./UniversitySelector'));
 import type { University } from '../lib/universities'; 
 
 // US bounds

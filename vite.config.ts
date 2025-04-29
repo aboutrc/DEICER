@@ -3,6 +3,26 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
+  build: {
+    sourcemap: true,
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true
+      }
+    },
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          map: ['maplibre-gl', 'react-map-gl'],
+          ui: ['lucide-react'],
+          supabase: ['@supabase/supabase-js']
+        }
+      }
+    }
+  },
   plugins: [
     react(),
     VitePWA({
@@ -44,6 +64,31 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,mp3,jpg,jpeg}'],
         runtimeCaching: [
           {
+            urlPattern: /^https:\/\/fonts\.googleapis\.com/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-stylesheets',
+              expiration: {
+                maxEntries: 5,
+                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
+              }
+            }
+          },
+          {
+            urlPattern: /^https:\/\/fonts\.gstatic\.com/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-webfonts',
+              expiration: {
+                maxEntries: 20,
+                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          {
             urlPattern: /^https:\/\/api\.maptiler\.com/,
             handler: 'CacheFirst',
             options: {
@@ -57,7 +102,14 @@ export default defineConfig({
           {
             urlPattern: /^https:\/\/.*\.supabase\.co/,
             handler: 'NetworkFirst',
-            options: { networkTimeoutSeconds: 10 }
+            options: { 
+              networkTimeoutSeconds: 10,
+              cacheName: 'supabase-api',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 5 // 5 minutes
+              }
+            }
           },
           {
             urlPattern: /^https:\/\/images\.unsplash\.com/,
@@ -134,9 +186,6 @@ export default defineConfig({
     alias: {
       'mapbox-gl': 'maplibre-gl'
     }
-  },
-  build: {
-    sourcemap: true
   },
   preview: {
     port: 4173,

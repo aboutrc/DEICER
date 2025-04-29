@@ -4,9 +4,59 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/logo.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    
+    <!-- Preload critical assets -->
+    <link rel="preload" href="/deicerlogo.png" as="image" />
+    
+    <!-- Inline critical CSS -->
+    <style>
+      /* Critical CSS for initial render */
+      body, html {
+        margin: 0;
+        padding: 0;
+        background-color: rgb(17 24 39);
+        color: #e5e7eb;
+        height: 100%;
+      }
+      .min-h-screen {
+        min-height: 100vh;
+      }
+      .flex {
+        display: flex;
+      }
+      .flex-col {
+        flex-direction: column;
+      }
+      .fixed {
+        position: fixed;
+      }
+      .bg-black {
+        background-color: #000;
+      }
+      .bg-gray-900 {
+        background-color: rgb(17 24 39);
+      }
+      .text-white {
+        color: #fff;
+      }
+      .z-50 {
+        z-index: 50;
+      }
+      .border-b {
+        border-bottom-width: 1px;
+      }
+      .border-gray-800 {
+        border-color: rgb(31 41 55);
+      }
+    </style>
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Special+Gothic+Expanded+One&family=Staatliches&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Special+Gothic+Expanded+One&family=Staatliches&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript>
+      <link href="https://fonts.googleapis.com/css2?family=Special+Gothic+Expanded+One&family=Staatliches&display=swap" rel="stylesheet">
+    </noscript>
+    
     <meta name="theme-color" content="#000000" />
     <meta name="description" content="DEICER : DEI Community Engagement Reporter" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -25,6 +75,6 @@
   <body class="min-h-screen flex flex-col">
     <div id="root"></div>
     <div id="overlay-root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="/src/main.tsx" defer></script>
   </body>
 </html>
