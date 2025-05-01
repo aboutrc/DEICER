@@ -95,6 +95,10 @@ const Lupe = ({ language = 'en' }: LupeProps) => {
         return;
       }
 
+      if (!import.meta.env.VITE_ELEVENLABS_API_KEY) {
+        throw new Error('ElevenLabs API key is not configured');
+      }
+
       conversationRef.current = await Conversation.startSession({
         agentId: config.voiceId,
         onConnect: () => {
@@ -118,7 +122,12 @@ const Lupe = ({ language = 'en' }: LupeProps) => {
       });
     } catch (error) {
       console.error('Error starting conversation:', error);
-      setError('Failed to start conversation. Please try again.');
+      const errorMessage = language === 'zh' ? '启动对话失败。请检查API密钥是否正确配置。' :
+                          language === 'es' ? 'Error al iniciar la conversación. Por favor, verifique que la clave API esté configurada correctamente.' :
+                          language === 'hi' ? 'वार्तालाप शुरू करने में विफल। कृपया जांचें कि API कुंजी सही तरीके से कॉन्फ़िगर की गई है।' :
+                          language === 'ar' ? 'فشل في بدء المحادثة. يرجى التحقق من تكوين مفتاح API بشكل صحيح.' :
+                          'Failed to start conversation. Please verify that the API key is correctly configured.';
+      setError(errorMessage);
     }
   };
 

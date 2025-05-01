@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { Search, MapPin } from 'lucide-react';
 import { translations } from '../translations';
 import Modal from './Modal';
-import useModal from '../hooks/useModal';
 
 interface LocationSearchProps {
   onLocationSelect: (lat: number, lng: number) => void;
   language?: 'en' | 'es' | 'zh';
   className?: string;
+  id?: string;
 }
 
 interface SearchResult {
@@ -16,14 +16,17 @@ interface SearchResult {
   display_name: string;
 }
 
-export default function LocationSearch({ onLocationSelect, language = 'en', className = '' }: LocationSearchProps) {
+export default function LocationSearch({ onLocationSelect, language = 'en', className = '', id }: LocationSearchProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
-  const { isOpen, openModal, closeModal } = useModal(false);
+  const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const t = translations[language];
+
+  const openModal = () => setIsOpen(true);
+  const closeModal = () => setIsOpen(false);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,11 +71,12 @@ export default function LocationSearch({ onLocationSelect, language = 'en', clas
   return (
     <div className={`relative ${className}`}>
       <button
-        onClick={openModal}
-        className="w-full px-3 py-2 bg-gray-800/90 backdrop-blur-sm text-gray-100 rounded-lg shadow-md flex items-center justify-center hover:bg-gray-700 transition-colors"
+        id={id}
+        onClick={() => openModal()}
+        className="w-full px-3 py-2 bg-gray-800/90 backdrop-blur-sm text-gray-100 rounded-lg shadow-md flex items-center hover:bg-gray-700 transition-colors"
       >
-        <MapPin size={20} className="mr-2" />
-        <span>
+        <Search size={20} className="mr-2" />
+        <span className="flex-1 text-left">
           {language === 'es' ? 'Buscar' : 
            language === 'zh' ? '搜索' : 
            language === 'hi' ? 'खोज' : 

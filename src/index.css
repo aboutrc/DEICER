@@ -431,9 +431,132 @@ elevenlabs-convai {
   animation: scaleFadeIn 0.3s ease-out forwards;
 }
 
+/* Stripe Elements custom styling */
+.StripeElement {
+  width: 100%;
+  padding: 0.5rem 0;
+}
+
+.StripeElement--focus {
+  outline: none;
+}
+
+.StripeElement--invalid {
+  border-color: #fa755a;
+}
+
+.StripeElement--webkit-autofill {
+  background-color: transparent !important;
+}
+
 /* Language toggle styles */
 .language-toggle {
   position: relative;
+}
+
+/* Blog post content styles */
+.prose p {
+  margin-bottom: 1rem;
+}
+
+.prose ul, .prose ol {
+  margin-bottom: 1rem;
+  padding-left: 1.5rem;
+}
+
+.prose ul li {
+  list-style-type: disc;
+  margin-bottom: 0.5rem;
+}
+
+.prose ol li {
+  list-style-type: decimal;
+  margin-bottom: 0.5rem;
+}
+
+.prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.prose h1 {
+  font-size: 1.875rem;
+}
+
+.prose h2 {
+  font-size: 1.5rem;
+}
+
+.prose h3 {
+  font-size: 1.25rem;
+}
+
+/* Fix for HTML content in blog posts */
+.prose p {
+  margin-bottom: 1rem;
+}
+
+.prose ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.prose ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.prose li {
+  margin-bottom: 0.5rem;
+}
+
+.prose h1, .prose h2, .prose h3, .prose h4 {
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  color: white;
+}
+
+.prose h1 {
+  font-size: 1.875rem;
+}
+
+.prose h2 {
+  font-size: 1.5rem;
+}
+
+.prose h3 {
+  font-size: 1.25rem;
+}
+
+/* Blog post image styles */
+.prose img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  margin: 1.5rem 0;
+  display: block;
+}
+
+.prose img.img-fluid {
+  width: 100%;
+  height: auto;
+}
+
+.prose img.rounded {
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.tox .tox-dialog__body-nav-item {
+  color: #e5e7eb !important;
+}
+
+.tox-collection__item-label {
+  color: #e5e7eb !important;
 }
 
 .language-dropdown {
@@ -632,4 +755,34 @@ elevenlabs-convai {
   background-color: #1f2937 !important;
   border: 1px solid #374151 !important;
   color: white !important;
+}
+
+/* Stripe Elements custom styling */
+.StripeElement {
+  width: 100%;
+  padding: 0.75rem 0;
+  color: white;
+}
+
+.StripeElement--focus {
+  outline: none;
+}
+
+.StripeElement--invalid {
+  border-color: #ef4444;
+}
+
+.StripeElement--webkit-autofill {
+  background-color: transparent !important;
+}
+
+/* Fix for Stripe iframe */
+.__PrivateStripeElement iframe {
+  opacity: 1 !important;
+  height: 24px !important;
+}
+
+/* Fix for Stripe card element */
+.StripeElement--empty {
+  min-height: 24px;
 }

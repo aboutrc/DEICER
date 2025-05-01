@@ -1,33 +1,33 @@
 import React, { useState } from 'react';
 import { products } from '../stripe-config';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, CreditCard, Mail } from 'lucide-react';
+import { Loader2, Mail } from 'lucide-react';
+import { Elements } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
+import StripePaymentForm from './StripePaymentForm';
 
 interface DonateProps {
   language?: 'en' | 'es' | 'zh' | 'hi' | 'ar';
 }
 
+// Load Stripe outside of component to avoid recreating it on each render
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY || '');
+
 const Donate: React.FC<DonateProps> = ({ language = 'en' }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [amount, setAmount] = useState<number>(10);
-  const [email, setEmail] = useState<string>('');
-  const [cardNumber, setCardNumber] = useState<string>('');
-  const [cardExpiry, setCardExpiry] = useState<string>('');
-  const [cardCvc, setCardCvc] = useState<string>('');
+  const [email, setEmail] = useState('');
   const [success, setSuccess] = useState<boolean>(false);
   const navigate = useNavigate();
 
   const translations = {
     en: {
-      title: 'Donate',
+      title: 'Support DEICER',
       donateButton: 'Donate',
       donateNow: 'Donate Now',
       loading: 'Processing...',
       error: 'An error occurred. Please try again.',
-      loginRequired: 'Please log in to donate',
-      loginButton: 'Log In',
-      signupButton: 'Sign Up',
       thankYou: 'Thank you for your support!',
       benefits: 'Your donation helps us:',
       benefit1: 'Keep the service free for everyone',
@@ -37,8 +37,16 @@ const Donate: React.FC<DonateProps> = ({ language = 'en' }) => {
       cardDetails: 'Card Details',
       cardNumber: 'Card Number',
       cardNumberPlaceholder: '1234 5678 9012 3456',
+      cardholderName: 'Cardholder Name',
+      cardholderNamePlaceholder: 'Name on card',
       cardExpiry: 'Expiration Date',
       cardExpiryPlaceholder: 'MM/YY',
+      billingAddress: 'Billing Address',
+      addressPlaceholder: 'Street address',
+      cityPlaceholder: 'City',
+      statePlaceholder: 'State',
+      zipCodePlaceholder: 'Zip code',
+      countryPlaceholder: 'Country',
       cardCvc: 'CVC',
       cardCvcPlaceholder: '123',
       amount: 'Donation Amount',
@@ -55,9 +63,6 @@ const Donate: React.FC<DonateProps> = ({ language = 'en' }) => {
       donateNow: 'Donar Ahora',
       loading: 'Procesando...',
       error: 'Ocurrió un error. Por favor, inténtalo de nuevo.',
-      loginRequired: 'Por favor, inicia sesión para donar',
-      loginButton: 'Iniciar Sesión',
-      signupButton: 'Registrarse',
       thankYou: '¡Gracias por tu apoyo!',
       benefits: 'Tu donación nos ayuda a:',
       benefit1: 'Mantener el servicio gratuito para todos',
@@ -67,8 +72,16 @@ const Donate: React.FC<DonateProps> = ({ language = 'en' }) => {
       cardDetails: 'Detalles de la Tarjeta',
       cardNumber: 'Número de Tarjeta',
       cardNumberPlaceholder: '1234 5678 9012 3456',
+      cardholderName: 'Nombre del Titular',
+      cardholderNamePlaceholder: 'Nombre en la tarjeta',
       cardExpiry: 'Fecha de Expiración',
       cardExpiryPlaceholder: 'MM/AA',
+      billingAddress: 'Dirección de Facturación',
+      addressPlaceholder: 'Dirección',
+      cityPlaceholder: 'Ciudad',
+      statePlaceholder: 'Estado',
+      zipCodePlaceholder: 'Código postal',
+      countryPlaceholder: 'País',
       cardCvc: 'CVC',
       cardCvcPlaceholder: '123',
       amount: 'Monto de Donación',
@@ -85,9 +98,6 @@ const Donate: React.FC<DonateProps> = ({ language = 'en' }) => {
       donateNow: '立即捐赠',
       loading: '处理中...',
       error: '发生错误。请重试。',
-      loginRequired: '请登录后捐赠',
-      loginButton: '登录',
-      signupButton: '注册',
       thankYou: '感谢您的支持！',
       benefits: '您的捐款帮助我们：',
       benefit1: '保持服务对所有人免费',
@@ -97,8 +107,16 @@ const Donate: React.FC<DonateProps> = ({ language = 'en' }) => {
       cardDetails: '卡片详情',
       cardNumber: '卡号',
       cardNumberPlaceholder: '1234 5678 9012 3456',
+      cardholderName: '持卡人姓名',
+      cardholderNamePlaceholder: '卡片上的姓名',
       cardExpiry: '有效期',
       cardExpiryPlaceholder: 'MM/YY',
+      billingAddress: '账单地址',
+      addressPlaceholder: '街道地址',
+      cityPlaceholder: '城市',
+      statePlaceholder: '州/省',
+      zipCodePlaceholder: '邮政编码',
+      countryPlaceholder: '国家',
       cardCvc: '安全码',
       cardCvcPlaceholder: '123',
       amount: '捐赠金额',
@@ -115,9 +133,6 @@ const Donate: React.FC<DonateProps> = ({ language = 'en' }) => {
       donateNow: 'अभी दान करें',
       loading: 'प्रोसेसिंग...',
       error: 'एक त्रुटि हुई। कृपया पुनः प्रयास करें।',
-      loginRequired: 'दान करने के लिए कृपया लॉग इन करें',
-      loginButton: 'लॉग इन',
-      signupButton: 'साइन अप',
       thankYou: 'आपके समर्थन के लिए धन्यवाद!',
       benefits: 'आपका दान हमें मदद करता है:',
       benefit1: 'सेवा को सभी के लिए मुफ्त रखने में',
@@ -127,8 +142,16 @@ const Donate: React.FC<DonateProps> = ({ language = 'en' }) => {
       cardDetails: 'कार्ड विवरण',
       cardNumber: 'कार्ड नंबर',
       cardNumberPlaceholder: '1234 5678 9012 3456',
+      cardholderName: 'कार्डधारक का नाम',
+      cardholderNamePlaceholder: 'कार्ड पर नाम',
       cardExpiry: 'समाप्ति तिथि',
       cardExpiryPlaceholder: 'MM/YY',
+      billingAddress: 'बिलिंग पता',
+      addressPlaceholder: 'सड़क का पता',
+      cityPlaceholder: 'शहर',
+      statePlaceholder: 'राज्य',
+      zipCodePlaceholder: 'ज़िप कोड',
+      countryPlaceholder: 'देश',
       cardCvc: 'CVC',
       cardCvcPlaceholder: '123',
       amount: 'दान राशि',
@@ -145,9 +168,6 @@ const Donate: React.FC<DonateProps> = ({ language = 'en' }) => {
       donateNow: 'تبرع الآن',
       loading: 'جاري المعالجة...',
       error: 'حدث خطأ. يرجى المحاولة مرة أخرى.',
-      loginRequired: 'يرجى تسجيل الدخول للتبرع',
-      loginButton: 'تسجيل الدخول',
-      signupButton: 'إنشاء حساب',
       thankYou: 'شكرًا لدعمك!',
       benefits: 'تبرعك يساعدنا في:',
       benefit1: 'الحفاظ على الخدمة مجانية للجميع',
@@ -157,8 +177,16 @@ const Donate: React.FC<DonateProps> = ({ language = 'en' }) => {
       cardDetails: 'تفاصيل البطاقة',
       cardNumber: 'رقم البطاقة',
       cardNumberPlaceholder: '1234 5678 9012 3456',
+      cardholderName: 'اسم حامل البطاقة',
+      cardholderNamePlaceholder: 'الاسم على البطاقة',
       cardExpiry: 'تاريخ الانتهاء',
       cardExpiryPlaceholder: 'MM/YY',
+      billingAddress: 'عنوان الفواتير',
+      addressPlaceholder: 'عنوان الشارع',
+      cityPlaceholder: 'المدينة',
+      statePlaceholder: 'الولاية',
+      zipCodePlaceholder: 'الرمز البريدي',
+      countryPlaceholder: 'البلد',
       cardCvc: 'رمز التحقق',
       cardCvcPlaceholder: '123',
       amount: 'مبلغ التبرع',
@@ -181,59 +209,13 @@ const Donate: React.FC<DonateProps> = ({ language = 'en' }) => {
     }
   };
 
-  const formatCardNumber = (value: string) => {
-    // Remove all non-digit characters
-    const digits = value.replace(/\D/g, '');
-    
-    // Add space after every 4 digits
-    const formatted = digits.replace(/(\d{4})(?=\d)/g, '$1 ');
-    
-    // Limit to 19 characters (16 digits + 3 spaces)
-    return formatted.slice(0, 19);
-  };
-
-  const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCardNumber(formatCardNumber(e.target.value));
-  };
-
-  const formatExpiry = (value: string) => {
-    // Remove all non-digit characters
-    const digits = value.replace(/\D/g, '');
-    
-    // Format as MM/YY
-    if (digits.length > 2) {
-      return `${digits.slice(0, 2)}/${digits.slice(2, 4)}`;
-    }
-    
-    return digits;
-  };
-
-  const handleExpiryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCardExpiry(formatExpiry(e.target.value));
-  };
-
-  const handleCvcChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Only allow digits and limit to 4 characters (some cards have 4-digit CVC)
-    const value = e.target.value.replace(/\D/g, '').slice(0, 4);
-    setCardCvc(value);
-  };
-
   const handleDonate = async () => {
     try {
       setIsLoading(true);
       setError(null);
-      
-      // Simulate payment processing
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Show success message
+
+      // Payment will be handled by the StripePaymentForm component
       setSuccess(true);
-      
-      // Clear form
-      setCardNumber('');
-      setCardExpiry('');
-      setCardCvc('');
-      
     } catch (err) {
       console.error('Donation error:', err);
       setError(t.error);
@@ -323,7 +305,7 @@ const Donate: React.FC<DonateProps> = ({ language = 'en' }) => {
                     </div>
                   </div>
 
-                  <div className="mb-6">
+                  <div className="mb-4">
                     <label className="block text-white font-medium mb-2">{t.emailLabel}</label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
@@ -337,56 +319,16 @@ const Donate: React.FC<DonateProps> = ({ language = 'en' }) => {
                     </div>
                   </div>
 
-                  <div className="mb-6">
-                    <h4 className="text-white font-medium mb-2">{t.cardDetails}</h4>
-                    <div className="space-y-4">
-                      <div className="relative">
-                        <CreditCard className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                        <input
-                          type="text"
-                          value={cardNumber}
-                          onChange={handleCardNumberChange}
-                          className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-white"
-                          placeholder={t.cardNumberPlaceholder}
-                          maxLength={19}
-                        />
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        <input
-                          type="text"
-                          value={cardExpiry}
-                          onChange={handleExpiryChange}
-                          className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-white"
-                          placeholder={t.cardExpiryPlaceholder}
-                          maxLength={5}
-                        />
-                        <input
-                          type="text"
-                          value={cardCvc}
-                          onChange={handleCvcChange}
-                          className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-white"
-                          placeholder={t.cardCvcPlaceholder}
-                          maxLength={4}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={handleDonate}
-                    disabled={isLoading || !cardNumber || !cardExpiry || !cardCvc}
-                    className="w-full px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-black rounded-lg font-medium transition-colors flex items-center justify-center"
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 size={20} className="animate-spin mr-2" />
-                        {t.loading}
-                      </>
-                    ) : (
-                      t.donateNow
-                    )}
-                  </button>
+                  <Elements stripe={stripePromise}>
+                    <StripePaymentForm
+                      amount={amount}
+                      onSuccess={handleDonate}
+                      onError={setError}
+                      isProcessing={isLoading}
+                      setIsProcessing={setIsLoading}
+                      language={language}
+                    />
+                  </Elements>
                 </div>
 
                 <div className="text-gray-300">

@@ -1,6 +1,7 @@
 import React, { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
+import AlertSystem from './components/AlertSystem';
 
 // Lazy load components
 const MapView = lazy(() => import('./components/Map'));
@@ -67,6 +68,7 @@ function App() {
   return (
     <Router>
       <Suspense fallback={<LoadingFallback />}>
+        <AlertSystem position="top-center" maxAlerts={3} />
         <Routes>
           <Route path="/" element={
             <Layout 

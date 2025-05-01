@@ -2,16 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { GraduationCap, Search, X } from 'lucide-react';
 import { universities, University } from '../lib/universities';
 import { translations } from '../translations';
-import Modal from './Modal';
-import '../index.css';
+import Modal from './Modal'; 
 
 interface UniversitySelectorProps {
   onSelect: (university: University) => void;
   language?: 'en' | 'es' | 'zh' | 'hi' | 'ar';
   className?: string;
+  id?: string;
 }
 
-const UniversitySelector: React.FC<UniversitySelectorProps> = ({ onSelect, language = 'en', className = '' }) => {
+const UniversitySelector: React.FC<UniversitySelectorProps> = ({ onSelect, language = 'en', className = '', id }) => {
   const [showLightbox, setShowLightbox] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const t = translations[language];
@@ -45,11 +45,12 @@ const UniversitySelector: React.FC<UniversitySelectorProps> = ({ onSelect, langu
   return (
     <div className={`relative z-[1003] self-center ${className}`}>
       <button
-        onClick={() => setShowLightbox(true)}
-        className="w-full px-3 py-2 bg-gray-800/90 backdrop-blur-sm text-gray-100 rounded-lg shadow-md flex items-center justify-center hover:bg-gray-700 transition-colors"
+        id={id}
+        onClick={() => setShowLightbox(true)} 
+        className="w-full px-3 py-2 bg-gray-800/90 backdrop-blur-sm text-gray-100 rounded-lg shadow-md flex items-center hover:bg-gray-700 transition-colors"
       >
         <GraduationCap size={20} className="mr-2" />
-        <span>
+        <span className="flex-1 text-left">
           {language === 'es' ? 'Universidad' : 
            language === 'zh' ? '大学' : 
            language === 'hi' ? 'विश्वविद्यालय' : 

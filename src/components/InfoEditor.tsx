@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Editor } from '@tinymce/tinymce-react';
 import { supabase } from '../lib/supabase';
-import { ChevronDown, ChevronRight, Pencil, Plus, Save, Trash2, GripVertical } from 'lucide-react';
+import { ChevronDown, ChevronRight, Pencil, Plus, Save, Trash2, GripVertical, Link as LinkIcon, Image } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import Auth from './Auth';
 
@@ -324,6 +324,11 @@ const InfoEditor: React.FC<InfoEditorProps> = ({ language = 'en' }) => {
     try {
       setError(null);
       
+      // Confirm before deleting
+      if (!window.confirm('Are you sure you want to delete this post?')) {
+        return;
+      }
+      
       const { error: deleteError } = await supabase
         .from('blog_posts')
         .delete()
@@ -338,7 +343,8 @@ const InfoEditor: React.FC<InfoEditorProps> = ({ language = 'en' }) => {
         return newSet;
       });
       
-      await fetchPosts();
+      // Update local state without refetching
+      setPosts(currentPosts => currentPosts.filter(p => p.id !== postId));
     } catch (err) {
       console.error('Error deleting post:', err);
       setError(err instanceof Error ? err.message : 'Failed to delete post');
@@ -441,7 +447,7 @@ const InfoEditor: React.FC<InfoEditorProps> = ({ language = 'en' }) => {
               />
               <div className="bg-gray-700 rounded-lg overflow-hidden">
                 <Editor
-                  apiKey="no-api-key"
+                  apiKey={import.meta.env.VITE_TINYMCE_API_KEY}
                   value={currentContent}
                   onEditorChange={(content) => setCurrentContent(content)}
                   init={{
@@ -450,15 +456,62 @@ const InfoEditor: React.FC<InfoEditorProps> = ({ language = 'en' }) => {
                     plugins: [
                       'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
                       'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                      'insertdatetime', 'media', 'table', 'code', 'help', 'wordcount'
+                      'insertdatetime', 'media', 'table', 'code', 'help', 'wordcount', 'link'
                     ],
                     toolbar: 'undo redo | blocks | ' +
                       'bold italic forecolor | alignleft aligncenter ' +
                       'alignright alignjustify | bullist numlist outdent indent | ' +
-                      'removeformat | help',
+                     'removeformat | link image | help',
                     content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px; color: #e5e7eb; }',
                     skin: 'oxide-dark',
                     content_css: 'dark',
+                    link_default_target: '_blank',
+                    link_assume_external_targets: true,
+                    link_title: false,
+                    link_context_toolbar: true,
+                    link_rel_list: [
+                      { title: 'None', value: '' },
+                      { title: 'No follow', value: 'nofollow' },
+                      { title: 'No opener', value: 'noopener' },
+                      { title: 'No referrer', value: 'noreferrer' }
+                    ],
+                    link_target_list: [
+                      { title: 'New window', value: '_blank' },
+                      { title: 'Same window', value: '_self' }
+                    ],
+                    images_upload_handler: async function (blobInfo, progress) {
+                      try {
+                        const file = blobInfo.blob();
+                        const fileName = `${Date.now()}-${blobInfo.filename()}`;
+                        
+                        // Upload to public directory
+                        const { data, error } = await supabase.storage
+                          .from('blog-images')
+                          .upload(fileName, file, {
+                            cacheControl: '3600',
+                            upsert: false
+                          });
+                        
+                        if (error) throw error;
+                        
+                        // Get public URL
+                        const { data: { publicUrl } } = supabase.storage
+                          .from('blog-images')
+                          .getPublicUrl(fileName);
+                        
+                        return publicUrl;
+                      } catch (error) {
+                        console.error('Image upload error:', error);
+                        return Promise.reject('Image upload failed');
+                      }
+                    },
+                    image_dimensions: false,
+                    image_class_list: [
+                      { title: 'None', value: '' },
+                      { title: 'Responsive', value: 'img-fluid rounded' }
+                    ],
+                    file_picker_types: 'image',
+                    automatic_uploads: true
                   }}
                 />
               </div>
@@ -543,6 +596,7 @@ const InfoEditor: React.FC<InfoEditorProps> = ({ language = 'en' }) => {
                               <button
                                 onClick={() => handleDelete(post.id)}
                                 className="p-2 text-gray-400 hover:text-red-500 hover:bg-gray-700 rounded-lg"
+                                aria-label="Delete post"
                               >
                                 <Trash2 size={20} />
                               </button>

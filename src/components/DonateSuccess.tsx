@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { CheckCircle, ArrowLeft } from 'lucide-react';
 
 interface DonateSuccessProps {
@@ -7,7 +7,8 @@ interface DonateSuccessProps {
 }
 
 const DonateSuccess: React.FC<DonateSuccessProps> = ({ language = 'en' }) => {
-  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
   const sessionId = searchParams.get('session_id');
   const navigate = useNavigate();
   const [countdown, setCountdown] = useState(5);
@@ -15,7 +16,7 @@ const DonateSuccess: React.FC<DonateSuccessProps> = ({ language = 'en' }) => {
   const translations = {
     en: {
       title: 'Thank You for Your Donation!',
-      subtitle: 'Your support helps us continue our mission.',
+      subtitle: 'Your support helps us continue our mission to protect immigrant rights.',
       message: 'Your donation has been successfully processed.',
       sessionId: 'Session ID:',
       redirectMessage: 'You will be redirected to the home page in',
@@ -24,7 +25,7 @@ const DonateSuccess: React.FC<DonateSuccessProps> = ({ language = 'en' }) => {
     },
     es: {
       title: '¡Gracias por tu Donación!',
-      subtitle: 'Tu apoyo nos ayuda a continuar nuestra misión.',
+      subtitle: 'Tu apoyo nos ayuda a continuar nuestra misión de proteger los derechos de los inmigrantes.',
       message: 'Tu donación ha sido procesada con éxito.',
       sessionId: 'ID de Sesión:',
       redirectMessage: 'Serás redirigido a la página principal en',
@@ -33,7 +34,7 @@ const DonateSuccess: React.FC<DonateSuccessProps> = ({ language = 'en' }) => {
     },
     zh: {
       title: '感谢您的捐赠！',
-      subtitle: '您的支持帮助我们继续我们的使命。',
+      subtitle: '您的支持帮助我们继续我们保护移民权利的使命。',
       message: '您的捐赠已成功处理。',
       sessionId: '会话ID：',
       redirectMessage: '您将在以下时间内重定向到主页',
@@ -42,7 +43,7 @@ const DonateSuccess: React.FC<DonateSuccessProps> = ({ language = 'en' }) => {
     },
     hi: {
       title: 'आपके दान के लिए धन्यवाद!',
-      subtitle: 'आपका समर्थन हमें अपने मिशन को जारी रखने में मदद करता है।',
+      subtitle: 'आपका समर्थन हमें प्रवासी अधिकारों की रक्षा के अपने मिशन को जारी रखने में मदद करता है।',
       message: 'आपका दान सफलतापूर्वक प्रोसेस किया गया है।',
       sessionId: 'सेशन आईडी:',
       redirectMessage: 'आप होम पेज पर रीडायरेक्ट किए जाएंगे',
@@ -51,7 +52,7 @@ const DonateSuccess: React.FC<DonateSuccessProps> = ({ language = 'en' }) => {
     },
     ar: {
       title: 'شكراً لتبرعك!',
-      subtitle: 'دعمك يساعدنا على مواصلة مهمتنا.',
+      subtitle: 'دعمك يساعدنا على مواصلة مهمتنا في حماية حقوق المهاجرين.',
       message: 'تمت معالجة تبرعك بنجاح.',
       sessionId: 'معرف الجلسة:',
       redirectMessage: 'ستتم إعادة توجيهك إلى الصفحة الرئيسية في',
