@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './database.types';
 import type { Marker, MarkerCategory } from '../types';
-import { calculateDistance, formatDistance } from './distanceUtils';
+import { calculateDistance, calculateBearing } from './distanceUtils';
 
 // Get Supabase credentials from environment variables with debugging
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -22,7 +22,7 @@ export const supabase = createClient<Database>(
     },
     realtime: {
       params: {
-        eventsPerSecond: 2
+        eventsPerSecond: 10
       }
     },
     global: {
@@ -190,84 +190,4 @@ export const fetchMarkersWithinRadius = async (
 // Convert miles to kilometers
 const milesToKm = (miles: number): number => {
   return miles * 1.60934;
-};
-
-// Subscribe to new ICE markers within a specified radius
-export const subscribeToIceMarkers = (
-  userLat: number,
-  userLng: number,
-  radiusMiles: number,
-  callback: (marker: Marker, distanceInMiles: number) => void
-): (() => void) => {
-  if (!isSupabaseConfigured()) {
-    console.warn('Missing parameters for subscribeToIceMarkers');
-    return () => {}; // Return empty function if parameters are missing
-  }
-  
-  const radiusKm = milesToKm(radiusMiles);
-  
-  console.log(`Subscribing to ICE markers within ${radiusMiles} miles (${radiusKm} km) of [${userLat}, ${userLng}]`);
-  
-  // Subscribe to the markers table for inserts
-  const subscription = supabase
-    .channel('ice-markers')
-    .on(
-      'postgres_changes',
-      {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'markers',
-        filter: 'active=eq.true'
-      },
-      (payload) => {
-        console.log('Received marker update:', payload);
-        const newMarker = payload.new;
-        if (!newMarker) return;
-        
-        // Log the marker for debugging
-        console.log('Processing new marker:', {
-          id: newMarker.id,
-          category: newMarker.category,
-          lat: newMarker.latitude,
-          lng: newMarker.longitude,
-          active: newMarker.active
-        });
-        
-        // Calculate distance between user and new marker
-        const distance = calculateDistance(
-          userLat,
-          userLng,
-          newMarker.latitude,
-          newMarker.longitude
-        );
-
-        console.log(`Distance to marker: ${distance} km (${distance / 1.60934} miles), Radius: ${radiusKm} km`);
-        
-        // If within radius, trigger callback
-        if (distance <= radiusKm && callback) {
-          const marker: Marker = {
-            id: newMarker.id,
-            position: { lat: newMarker.latitude, lng: newMarker.longitude },
-            category: newMarker.category as MarkerCategory,
-            createdAt: new Date(newMarker.created_at),
-            active: newMarker.active
-          };
-
-          // Pass the distance in miles to the callback
-          console.log(`Marker within radius! Triggering callback with distance: ${distance / 1.60934} miles`);
-          callback(marker, distance / 1.60934); // Convert km to miles
-        }
-      }
-    )
-    .subscribe();
-  
-  console.log('Subscription created:', subscription);
-  
-  // Return unsubscribe function
-  return () => {
-    if (subscription) {
-      console.log('Unsubscribing from ICE markers');
-      supabase.removeChannel(subscription);
-    }
-  };
 };

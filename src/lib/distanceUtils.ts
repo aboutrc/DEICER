@@ -11,6 +11,11 @@ export const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2
   return d;
 };
 
+// Convert miles to meters
+export const milesToMeters = (miles: number): number => {
+  return miles * 1609.34; // 1 mile = 1609.34 meters
+};
+
 const deg2rad = (deg: number): number => {
   return deg * (Math.PI / 180);
 };

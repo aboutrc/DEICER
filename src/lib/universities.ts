@@ -185,18 +185,4 @@ export const universities: University[] = [
       radius: 2400
     }
   },
-  {
-    university: "Syracuse University, Syracuse, NY",
-    geofence_coordinates: {
-      center: { latitude: 43.0377, longitude: -76.1349 },
-      radius: 1600
-    }
-  },
-  {
-    university: "Colgate University, Hamilton, NY",
-    geofence_coordinates: {
-      center: { latitude: 42.8189, longitude: -75.5376 },
-      radius: 1600
-    }
-  }
 ];

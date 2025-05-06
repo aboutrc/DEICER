@@ -63,13 +63,22 @@ const UniversitySelector: React.FC<UniversitySelectorProps> = ({ onSelect, langu
         isOpen={showLightbox}
         onClose={() => setShowLightbox(false)}
         title={
-          <span className="flex items-center">
+          <span className="flex flex-col items-center text-center">
             <GraduationCap className="mr-2" size={24} />
-            {language === 'es' ? 'Seleccionar Universidad' :
-             language === 'zh' ? '选择大学' :
-             language === 'hi' ? 'विश्वविद्यालय चुनें' :
-             language === 'ar' ? 'اختر الجامعة' :
-             'Select University'}
+            <div>
+              {language === 'es' ? 'Universidades en' :
+               language === 'zh' ? '互助学术防御协议的' :
+               language === 'hi' ? 'पारस्परिक शैक्षणिक रक्षा समझौतों में' :
+               language === 'ar' ? 'الجامعات في' :
+               'Universities in'}
+            </div>
+            <div>
+              {language === 'es' ? 'Pactos de Defensa Académica Mutua' :
+               language === 'zh' ? '大学' :
+               language === 'hi' ? 'शामिल विश्वविद्यालय' :
+               language === 'ar' ? 'اتفاقيات الدفاع الأكاديمي المتبادل' :
+              'Mutual Academic Defense Compacts (MDAC)'}
+            </div>
           </span>
         }
       >

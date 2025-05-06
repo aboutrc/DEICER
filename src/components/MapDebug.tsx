@@ -10,7 +10,7 @@ import type { University } from '../lib/universities';
 import { supabase, fetchMarkersWithinRadius, testSupabaseConnection } from '../lib/supabase';
 import type { Marker as MarkerType, MarkerCategory } from '../types';
 import { ScanEye, Plus, AlertTriangle, X, Bell, Eye } from 'lucide-react';
-import { calculateDistance, formatDistance, calculateBearing, milesToMeters } from '../lib/distanceUtils';
+import { calculateDistance, formatDistance, calculateBearing } from '../lib/distanceUtils';
 import Modal from './Modal';
 
 const Marker = React.lazy(() => import('react-map-gl/maplibre').then(module => ({ default: module.Marker })));
@@ -24,17 +24,7 @@ const DEFAULT_CENTER = {
   latitude: 43.03643
 };
 
-interface MapViewProps {
-  language?: 'en' | 'es' | 'zh' | 'hi' | 'ar';
-  selectedUniversity: University | null;
-  onUniversitySelect: (university: University) => void;
-}
-
-const MapView: React.FC<MapViewProps> = ({ 
-  language = 'en', 
-  selectedUniversity, 
-  onUniversitySelect 
-}) => {
+const MapDebug: React.FC = () => {
   const [viewState, setViewState] = useState({
     longitude: DEFAULT_CENTER.longitude,
     latitude: DEFAULT_CENTER.latitude,
@@ -185,49 +175,8 @@ const MapView: React.FC<MapViewProps> = ({
   // Handle map click for adding markers
   const handleMapClick = (e: maplibregl.MapLayerMouseEvent) => {
     if (isAddingMarker) {
-      // Get click coordinates
-      const clickLng = e.lngLat.lng;
-      const clickLat = e.lngLat.lat;
-      
-      // Check if user location is available
-      if (!userLocation) {
-        addAlert({
-          message: language === 'es' ? "Se requiere ubicación para agregar marcadores" : 
-                   language === 'zh' ? "添加标记需要位置信息" : 
-                   language === 'hi' ? "मार्कर जोड़ने के लिए स्थान की आवश्यकता है" : 
-                   language === 'ar' ? "يلزم الموقع لإضافة علامات" : 
-                   "Location is required to add markers",
-          type: 'warning',
-          duration: 3000
-        });
-        return;
-      }
-      
-      // Calculate distance between user and click location
-      const distance = calculateDistance(
-        userLocation.lat, userLocation.lng,
-        clickLat, clickLng
-      );
-      
-      // Convert to miles (0.25 miles = 0.4 km)
-      const distanceInMiles = distance / 1.60934;
-      
-      // Check if within 1/4 mile (0.25 miles)
-      if (distanceInMiles > 0.25) {
-        addAlert({
-          message: language === 'es' ? "Solo puedes colocar marcadores dentro de 1/4 milla de tu ubicación" : 
-                   language === 'zh' ? "您只能在距离您位置1/4英里内放置标记" : 
-                   language === 'hi' ? "आप केवल अपने स्थान से 1/4 मील के भीतर मार्कर रख सकते हैं" : 
-                   language === 'ar' ? "يمكنك فقط وضع علامات ضمن ربع ميل من موقعك" : 
-                   "You can only place markers within 1/4 mile of your location",
-          type: 'error',
-          duration: 5000
-        });
-        return;
-      }
-      
-      // If within range, proceed with marker placement
-      setPendingMarker({ lat: clickLat, lng: clickLng });
+      const { lng, lat } = e.lngLat;
+      setPendingMarker({ lat, lng });
       setShowCategoryDialog(true);
     }
   };
@@ -442,21 +391,6 @@ const MapView: React.FC<MapViewProps> = ({
     };
   }, []);
 
-  // Handle university selection
-  useEffect(() => {
-    if (selectedUniversity && mapRef.current) {
-      // Fly to the university location
-      mapRef.current.flyTo({
-        center: [
-          selectedUniversity.geofence_coordinates.center.longitude,
-          selectedUniversity.geofence_coordinates.center.latitude
-        ],
-        zoom: 14,
-        duration: 1000
-      });
-    }
-  }, [selectedUniversity]);
-
   return (
     <div className="h-screen w-screen relative">
       {!mapLoaded && (
@@ -467,7 +401,7 @@ const MapView: React.FC<MapViewProps> = ({
 
     {/* ICE Alert */}
     {showIceAlert && (
-      <div className="map-alert-box bg-red-900/90 text-white px-4 py-3 rounded-lg shadow-lg flex items-center justify-between max-w-md w-full animate-fade-in">
+      <div className="absolute top-10 left-1/8 transform -translate-x-1/2 z-50 bg-red-900/90 text-white px-4 py-3 rounded-lg shadow-lg flex items-center justify-between max-w-md w-full animate-fade-in">
         <div className="flex items-center flex-1 mr-2 font-medium">
           <Bell size={20} className="mr-2 flex-shrink-0 text-yellow-300" />
           <span className="line-clamp-2">{iceAlertMessage}</span>
@@ -491,6 +425,16 @@ const MapView: React.FC<MapViewProps> = ({
       </div>
     )}
       
+      {/* Debug Info Panel */}
+      <div className="absolute top-4 left-4 z-20 bg-black/70 text-white p-4 rounded-lg text-sm font-mono hidden">
+        <h3 className="font-bold mb-2">Map Debug Info</h3>
+        <div>Zoom: {debugInfo.zoom.toFixed(4)}</div>
+        <div>Lat: {debugInfo.lat.toFixed(6)}</div>
+        <div>Lng: {debugInfo.lng.toFixed(6)}</div>
+        <div>Move Count: {debugInfo.moveCount}</div>
+        <div>Last Move: {new Date(debugInfo.lastMoveTime).toLocaleTimeString()}</div>
+      </div>
+      
       <MapGL
         {...viewState}
         ref={(ref) => {
@@ -502,9 +446,8 @@ const MapView: React.FC<MapViewProps> = ({
         mapStyle={`https://api.maptiler.com/maps/streets/style.json?key=${MAPTILER_KEY}`}
         mapLib={maplibregl}
         onLoad={() => setMapLoaded(true)}
-        reuseMaps
         onClick={handleMapClick}
-        style={{ width: '100%', height: '100%', position: 'absolute' }}
+        style={{ width: '100%', height: '100%' }}
         touchZoomRotate={true}
         dragRotate={false}
         touchPitch={false}
@@ -660,13 +603,13 @@ const MapView: React.FC<MapViewProps> = ({
       </MapGL>
       
       {/* Map Controls */}
-      <div className="absolute bottom-48 left-4 z-10 flex flex-col gap-2 buttonControls">
+      <div className="absolute bottom-60 left-4 z-10 flex flex-col gap-2 buttonControls">
         <MapControls
           isAddingMarker={isAddingMarker}
           setIsAddingMarker={setIsAddingMarker}
           isRefreshing={isRefreshing}
           refreshMarkers={refreshMarkers}
-          language={language}
+          language="en"
         />
       </div>
       
@@ -682,13 +625,12 @@ const MapView: React.FC<MapViewProps> = ({
               zoom: 14
             }));
           }}
-          language={language}
+          language="en"
         />
         
         <UniversitySelector
           id="university-selector-button"
           onSelect={(university: University) => {
-            onUniversitySelect(university);
             setViewState(prev => ({
               ...prev,
               latitude: university.geofence_coordinates.center.latitude,
@@ -696,7 +638,7 @@ const MapView: React.FC<MapViewProps> = ({
               zoom: 14
             }));
           }}
-          language={language}
+          language="en"
         />
       </div>
       
@@ -709,11 +651,7 @@ const MapView: React.FC<MapViewProps> = ({
             setPendingMarker(null);
             setIsAddingMarker(false);
           }}
-          title={language === 'es' ? "Seleccionar Categoría" : 
-                 language === 'zh' ? "选择类别" : 
-                 language === 'hi' ? "श्रेणी चुनें" : 
-                 language === 'ar' ? "اختر الفئة" : 
-                 "Select Category"}
+          title="Select Category"
         >
           <div className="p-4 space-y-4">
             <div className="grid grid-cols-2 gap-3">
@@ -736,32 +674,14 @@ const MapView: React.FC<MapViewProps> = ({
                 className="p-4 bg-blue-900/70 hover:bg-blue-800 text-white rounded-lg flex flex-col items-center"
               >
                 <ScanEye size={32} className="mb-2" />
-                <span>{language === 'es' ? 'Observador' : 
-                       language === 'zh' ? '观察者' : 
-                       language === 'hi' ? 'पर्यवेक्षक' : 
-                       language === 'ar' ? 'مراقب' : 
-                       'Observer'}</span>
+                <span>Observer</span>
               </button>
             </div>
             
             <div className="text-center text-gray-400 text-sm mt-4">
-              <p>{language === 'es' ? 'Los marcadores de Observador expirarán automáticamente después de 1 hora' : 
-                  language === 'zh' ? '观察者标记将在1小时后自动过期' : 
-                  language === 'hi' ? 'पर्यवेक्षक मार्कर 1 घंटे के बाद स्वचालित रूप से समाप्त हो जाएंगे' : 
-                  language === 'ar' ? 'ستنتهي صلاحية علامات المراقب تلقائيًا بعد ساعة واحدة' : 
-                  'Observer markers will automatically expire after 1 hour'}</p>
-              <p>{language === 'es' ? 'Los marcadores de ICE permanecerán activos durante 24 horas' : 
-                  language === 'zh' ? 'ICE标记将保持活跃24小时' : 
-                  language === 'hi' ? 'ICE मार्कर 24 घंटे तक सक्रिय रहेंगे' : 
-                  language === 'ar' ? 'ستظل علامات ICE نشطة لمدة 24 ساعة' : 
-                  'ICE markers will remain active for 24 hours'}</p>
-              <p className="mt-2 text-yellow-400">
-                {language === 'es' ? 'Recuerda usar el botón Actualizar para ver nuevos marcadores' : 
-                 language === 'zh' ? '记得使用刷新按钮检查新标记' : 
-                 language === 'hi' ? 'नए मार्कर देखने के लिए रिफ्रेश बटन का उपयोग करना याद रखें' : 
-                 language === 'ar' ? 'تذكر استخدام زر التحديث للتحقق من العلامات الجديدة' : 
-                 'Remember to use the Refresh button to check for new markers'}
-              </p>
+              <p>Observer markers will automatically expire after 1 hour</p>
+              <p>ICE markers will remain active for 24 hours</p>
+              <p className="mt-2 text-yellow-400">Remember to use the Refresh button to check for new markers</p>
             </div>
           </div>
         </Modal>
@@ -784,4 +704,4 @@ const MapView: React.FC<MapViewProps> = ({
   );
 };
 
-export default MapView;
+export default MapDebug;

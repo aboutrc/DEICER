@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { ChevronDown, AlertTriangle, Calendar, User, ExternalLink, BookOpen } from 'lucide-react';
+import { translations } from '../translations';
 
 interface BlogPost {
   id: string;
@@ -23,6 +24,7 @@ const Info = ({ language = 'en' }: InfoProps) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedPosts, setExpandedPosts] = useState<Set<string>>(new Set());
   const postsPerPage = 10;
+  const t = translations[language];
 
   useEffect(() => {
     fetchPosts();
@@ -74,14 +76,14 @@ const Info = ({ language = 'en' }: InfoProps) => {
   const totalPages = Math.ceil(posts.length / postsPerPage);
 
   return (
-    <div className={`min-h-screen bg-gray-900 ${language === 'ar' ? 'rtl' : 'ltr'}`}>
+    <div className={`min-h-screen bg-gray-900 ${language === 'ar' ? 'rtl' : 'ltr'} h-full overflow-y-auto`}>
       <div className="max-w-4xl mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold text-white mb-6 text-center">
           {language === 'es' ? 'Información' :
            language === 'zh' ? '信息' :
            language === 'hi' ? 'जानकारी' :
            language === 'ar' ? 'معلومات' :
-           'Information'}
+           t.title || 'Information'}
         </h1>
 
         {error && (
@@ -95,20 +97,12 @@ const Info = ({ language = 'en' }: InfoProps) => {
           <div className="flex flex-col justify-center items-center py-16">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
             <p className="text-gray-400">
-              {language === 'es' ? 'Cargando...' :
-               language === 'zh' ? '加载中...' :
-               language === 'hi' ? 'लोड हो रहा है...' :
-               language === 'ar' ? 'جار التحميل...' :
-               'Loading...'}
+              {t.loading || 'Loading...'}
             </p>
           </div>
         ) : posts.length === 0 ? (
           <div className="text-center py-16 text-gray-400">
-            {language === 'es' ? 'No hay publicaciones disponibles.' :
-             language === 'zh' ? '没有可用的帖子。' :
-             language === 'hi' ? 'कोई पोस्ट उपलब्ध नहीं है।' :
-             language === 'ar' ? 'لا توجد منشورات متاحة.' :
-             'No posts available.'}
+            {t.noPosts || 'No posts available.'}
           </div>
         ) : (
           <div className="grid gap-6">
@@ -175,11 +169,7 @@ const Info = ({ language = 'en' }: InfoProps) => {
                         <div className="p-3 bg-yellow-900/50 text-yellow-100 rounded-lg mb-6 text-sm flex items-start">
                           <AlertTriangle size={18} className="mr-2 mt-0.5 flex-shrink-0" />
                           <span>
-                            {language === 'es' ? 'Contenido no disponible en español. Mostrando contenido en inglés.' :
-                             language === 'zh' ? '内容不适用于中文。显示英文内容。' :
-                             language === 'hi' ? 'सामग्री हिंदी में उपलब्ध नहीं है। अंग्रेजी सामग्री दिखा रहा है।' :
-                             language === 'ar' ? 'المحتوى غير متوفر باللغة العربية. عرض المحتوى باللغة الإنجليزية.' :
-                             `Content not available in ${language}. Showing English content instead.`}
+                            {t.info?.contentNotAvailable || `Content not available in ${language}. Showing English content instead.`}
                           </span>
                         </div>
                       )}
@@ -197,7 +187,7 @@ const Info = ({ language = 'en' }: InfoProps) => {
                              language === 'zh' ? '额外资源' :
                              language === 'hi' ? 'अतिरिक्त संसाधन' :
                              language === 'ar' ? 'موارد إضافية' :
-                             'Additional Resources'}
+                             t.info?.additionalResources || 'Additional Resources'}
                           </h3>
 
                           <a
@@ -207,11 +197,7 @@ const Info = ({ language = 'en' }: InfoProps) => {
                             className="flex items-center px-4 py-3 bg-blue-600/80 hover:bg-blue-600 text-white rounded-lg transition-colors font-medium group"
                           >
                             <span className="flex-1">
-                              {language === 'es' ? 'Artículo de NEA sobre Inmigración' :
-                               language === 'zh' ? 'NEA移民指南文章' :
-                               language === 'hi' ? 'NEA का आव्रजन मार्गदर्शन लेख' :
-                               language === 'ar' ? 'مقال NEA حول الهجرة' :
-                               'NEA Article on Immigration Guidance'}
+                              {t.info?.neaArticle || 'NEA Article on Immigration Guidance'}
                             </span>
                             <ExternalLink size={16} className="ml-2 transition-transform group-hover:translate-x-1" />
                           </a>
@@ -223,11 +209,7 @@ const Info = ({ language = 'en' }: InfoProps) => {
                             className="flex items-center px-4 py-3 bg-gray-700/80 hover:bg-gray-700 text-white rounded-lg transition-colors font-medium group"
                           >
                             <span className="flex-1">
-                              {language === 'es' ? 'Descargar PDF de Orientación' :
-                               language === 'zh' ? '下载指南PDF' :
-                               language === 'hi' ? 'मार्गदर्शन PDF डाउनलोड करें' :
-                               language === 'ar' ? 'تحميل PDF الإرشادات' :
-                               'Download Guidance PDF'}
+                              {t.info?.downloadPdf || 'Download Guidance PDF'}
                             </span>
                             <ExternalLink size={16} className="ml-2 transition-transform group-hover:translate-x-1" />
                           </a>

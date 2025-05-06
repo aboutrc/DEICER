@@ -16,7 +16,8 @@ export default defineConfig({
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom'],
-          map: ['maplibre-gl', 'react-map-gl'],
+          // Don't include map libraries in the cached chunks
+          // to ensure fresh data is always loaded
           ui: ['lucide-react'],
           supabase: ['@supabase/supabase-js']
         }
@@ -90,12 +91,12 @@ export default defineConfig({
           },
           {
             urlPattern: /^https:\/\/api\.maptiler\.com/,
-            handler: 'CacheFirst',
+            handler: 'NetworkFirst',
             options: {
               cacheName: 'maptiler-cache',
               expiration: {
                 maxEntries: 50,
-                maxAgeSeconds: 60 * 60 * 24 // 24 hours
+                maxAgeSeconds: 60 * 5 // 5 minutes
               }
             }
           },
@@ -107,7 +108,7 @@ export default defineConfig({
               cacheName: 'supabase-api',
               expiration: {
                 maxEntries: 50,
-                maxAgeSeconds: 60 * 5 // 5 minutes
+                maxAgeSeconds: 60 // 1 minute
               }
             }
           },
@@ -168,7 +169,7 @@ export default defineConfig({
       'Access-Control-Expose-Headers': 'Content-Range, Range',
       'Access-Control-Allow-Credentials': 'true',
       'Cross-Origin-Resource-Policy': 'cross-origin',
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Cache-Control': 'no-store, must-revalidate, max-age=0',
       'Pragma': 'no-cache',
       'Expires': '0'
     }

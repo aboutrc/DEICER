@@ -2,12 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { translations } from '../translations';
 import { supabase, testSupabaseConnection } from '../lib/supabase';
 import { v4 as uuidv4 } from 'uuid';
-import { redCardStatements } from '../lib/audioStatements'; 
+import { redCardStatements } from '../lib/audioStatements';
 import AudioPlayer from './AudioPlayer';
 import { Play, Square, AlertTriangle, Loader2, Mic } from 'lucide-react';
-
-const ELEVENLABS_API_KEY = 'sk_fc3cf065a531918b6de89add71bc3cf8633fdcc4c225e29b';
-const VOICE_ID = 'pqHfZKP75CvOlQylNhV4';
 
 interface RedCardProps {
   language?: 'en' | 'es' | 'zh' | 'hi' | 'ar';
@@ -17,16 +14,20 @@ interface AudioButton {
   title: {
     en: string;
     es: string;
-    zh: string;
+    zh?: string;
+    hi?: string;
+    ar?: string;
   };
   text: {
     en: string;
     es: string;
-    zh: string;
+    zh?: string;
+    hi?: string;
+    ar?: string;
   };
 }
 
-const RedCard = ({ language }: RedCardProps) => {
+const RedCard = ({ language = 'en' }: RedCardProps) => {
   const [showEnglish, setShowEnglish] = useState(true);
   const [isRecording, setIsRecording] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +35,6 @@ const RedCard = ({ language }: RedCardProps) => {
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [sessionId] = useState(() => uuidv4());
   const [isSaving, setIsSaving] = useState(false);
-  const t = translations[language || 'en'];
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -44,31 +44,7 @@ const RedCard = ({ language }: RedCardProps) => {
   const [isSupabaseConnected, setIsSupabaseConnected] = useState(false);
   const [isCheckingConnection, setIsCheckingConnection] = useState(true);
   const [currentlyPlaying, setCurrentlyPlaying] = useState<number | null>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
-  
-  // This effect will handle recording state when audio is playing
-  useEffect(() => {
-    // We don't need to pause recording when audio plays
-    // Instead, we'll let both continue simultaneously to capture the audio playback
-    console.log('Audio playing state changed:', isAudioPlaying);
-  }, [isAudioPlaying]);
-  
-  // This effect will pause recording when audio is playing and resume after
-  useEffect(() => {
-    if (isAudioPlaying && mediaRecorderRef.current && isRecording) {
-      // Temporarily pause recording while audio plays
-      if (mediaRecorderRef.current.state === 'recording') {
-        mediaRecorderRef.current.pause();
-        console.log('Recording paused while audio plays');
-      }
-    } else if (!isAudioPlaying && mediaRecorderRef.current && isRecording) {
-      // Resume recording after audio finishes
-      if (mediaRecorderRef.current.state === 'paused') {
-        mediaRecorderRef.current.resume();
-        console.log('Recording resumed after audio finished');
-      }
-    }
-  }, [isAudioPlaying, isRecording]);
+  const t = translations[language] || translations.en;
   
   const getSupportedMimeType = () => {
     const types = [
@@ -92,61 +68,97 @@ const RedCard = ({ language }: RedCardProps) => {
     {
       title: {
         en: "Recording Notification",
-        es: "Notificación de Grabación"
+        es: "Notificación de Grabación",
+        zh: "录音通知",
+        hi: "रिकॉर्डिंग सूचना",
+        ar: "إشعار التسجيل"
       },
       text: {
         en: "This conversation is being recorded for my documentation should I need it. I choose to excersise my 5th Amendment rights under the United States Constitution",
-        es: "Esta conversación está siendo grabada para mi documentación en caso de que la necesite. Elijo ejercer mis derechos de la Quinta Enmienda bajo la Constitución de los Estados Unidos"
+        es: "Esta conversación está siendo grabada para mi documentación en caso de que la necesite. Elijo ejercer mis derechos de la Quinta Enmienda bajo la Constitución de los Estados Unidos",
+        zh: "这段对话正在被录音，以便我在需要时作为文档记录。我选择行使美国宪法第五修正案赋予我的权利",
+        hi: "यह वार्तालाप मेरे दस्तावेज़ीकरण के लिए रिकॉर्ड की जा रही है, अगर मुझे इसकी आवश्यकता हो। मैं अमेरिकी संविधान के तहत अपने 5वें संशोधन के अधिकारों का प्रयोग करने का चयन करता हूं",
+        ar: "يتم تسجيل هذه المحادثة لتوثيقي إذا احتجت إليها. أختار ممارسة حقوقي بموجب التعديل الخامس من دستور الولايات المتحدة"
       }
     },
     {
       title: {
         en: "Constitutional Rights",
-        es: "Derechos Constitucionales"
+        es: "Derechos Constitucionales",
+        zh: "宪法权利",
+        hi: "संवैधानिक अधिकार",
+        ar: "الحقوق الدستورية"
       },
       text: {
         en: "I do not wish to speak with you, answer your questions, or sign or hand you any documents based on my 5th Amendment rights under the United States Constitution.",
-        es: "No deseo hablar con usted, responder sus preguntas, ni firmar o entregarle documentos basándome en mis derechos de la Quinta Enmienda bajo la Constitución de los Estados Unidos."
+        es: "No deseo hablar con usted, responder sus preguntas, ni firmar o entregarle documentos basándome en mis derechos de la Quinta Enmienda bajo la Constitución de los Estados Unidos.",
+        zh: "根据美国宪法第五修正案赋予我的权利，我不希望与您交谈，回答您的问题，或签署或交给您任何文件。",
+        hi: "मैं अमेरिकी संविधान के तहत अपने 5वें संशोधन के अधिकारों के आधार पर आपसे बात करना, आपके प्रश्नों का उत्तर देना, या कोई दस्तावेज़ हस्ताक्षरित करना या आपको देना नहीं चाहता हूं।",
+        ar: "لا أرغب في التحدث معك، أو الإجابة على أسئلتك، أو التوقيع أو تسليمك أي مستندات بناءً على حقوقي بموجب التعديل الخامس من دستور الولايات المتحدة."
       }
     },
     {
       title: {
         en: "No Permission to Search",
-        es: "Sin Permiso para Registrar"
+        es: "Sin Permiso para Registrar",
+        zh: "不允许搜查",
+        hi: "तलाशी की अनुमति नहीं",
+        ar: "لا إذن للتفتيش"
       },
       text: {
         en: "I do not give you permission to search any of my belongings based on my 4th Amendment rights.",
-        es: "No le doy permiso para registrar ninguna de mis pertenencias basándome en mis derechos de la Cuarta Enmienda."
+        es: "No le doy permiso para registrar ninguna de mis pertenencias basándome en mis derechos de la Cuarta Enmienda.",
+        zh: "根据我的第四修正案权利，我不允许您搜查我的任何物品。",
+        hi: "मैं अपने चौथे संशोधन के अधिकारों के आधार पर आपको अपनी किसी भी संपत्ति की तलाशी लेने की अनुमति नहीं देता हूं।",
+        ar: "لا أعطيك إذنًا بتفتيش أي من ممتلكاتي بناءً على حقوقي بموجب التعديل الرابع."
       }
     },
     {
       title: {
         en: "Request Badge Numbers",
-        es: "Solicitar Números de Placa"
+        es: "Solicitar Números de Placa",
+        zh: "要求警徽号码",
+        hi: "बैज नंबर का अनुरोध",
+        ar: "طلب أرقام الشارات"
       },
       text: {
         en: "I would request badge numbers from all officers present.",
-        es: "Solicito los números de placa de todos los oficiales presentes."
+        es: "Solicito los números de placa de todos los oficiales presentes.",
+        zh: "我要求在场所有警官出示警徽号码。",
+        hi: "मैं उपस्थित सभी अधिकारियों से बैज नंबर का अनुरोध करूंगा।",
+        ar: "أطلب أرقام الشارات من جميع الضباط الحاضرين."
       }
     },
     {
       title: {
         en: "Free to Go?",
-        es: "¿Libre para Irme?"
+        es: "¿Libre para Irme?",
+        zh: "可以离开吗？",
+        hi: "क्या मैं जा सकता हूँ?",
+        ar: "هل أنا حر في المغادرة؟"
       },
       text: {
         en: "Am I free to go? Yes or No.",
-        es: "¿Soy libre de irme? Sí o No."
+        es: "¿Soy libre de irme? Sí o No.",
+        zh: "我可以离开吗？是或否。",
+        hi: "क्या मैं जाने के लिए स्वतंत्र हूँ? हाँ या नहीं।",
+        ar: "هل أنا حر في المغادرة؟ نعم أم لا."
       }
     },
     {
       title: {
         en: "Thank you. Goodbye.",
-        es: "Gracias. Adiós."
+        es: "Gracias. Adiós.",
+        zh: "谢谢。再见。",
+        hi: "धन्यवाद। अलविदा।",
+        ar: "شكرا. وداعا."
       },
       text: {
         en: "Thank you. I have documented this for my evidence. Have a good day Officer.",
-        es: "Gracias. He documentado esto como evidencia. Que tenga un buen día, Oficial."
+        es: "Gracias. He documentado esto como evidencia. Que tenga un buen día, Oficial.",
+        zh: "谢谢。我已将此作为证据记录在案。祝您有愉快的一天，警官。",
+        hi: "धन्यवाद। मैंने इसे अपने सबूत के लिए दस्तावेज़ीकृत कर लिया है। आपका दिन शुभ हो, अधिकारी।",
+        ar: "شكرا. لقد وثقت هذا كدليل. أتمنى لك يوما طيبا أيها الضابط."
       }
     }
   ];
@@ -266,7 +278,7 @@ const RedCard = ({ language }: RedCardProps) => {
       const extension = 'webm';
       const fileName = `${uuidv4()}.${extension}`;
       
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { data, error: uploadError } = await supabase.storage
         .from('recordings')
         .upload(fileName, audioBlob);
 
@@ -351,115 +363,17 @@ const RedCard = ({ language }: RedCardProps) => {
     }
   };
 
-  const generateAndPlaySpeech = async (text: string, index: number) => {
-    try {
-      if (currentlyPlaying === index) {
-        if (audioRef.current) {
-          audioRef.current.pause();
-          audioRef.current.currentTime = 0;
-        }
-        setCurrentlyPlaying(null);
-        return;
-      }
-
-      setIsGenerating(true);
-      setError(null);
-      
-      const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'xi-api-key': ELEVENLABS_API_KEY
-        },
-        body: JSON.stringify({
-          text,
-          model_id: "eleven_monolingual_v1",
-          voice_settings: {
-            stability: 0.75,
-            similarity_boost: 0.75,
-            style: 0.0,
-            use_speaker_boost: true
-          }
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to generate speech');
-      }
-
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-
-      if (!audioRef.current) {
-        audioRef.current = new Audio();
-      }
-
-      audioRef.current.src = url;
-      audioRef.current.volume = 1.0;
-      
-      // Set audio playing state
-      setIsAudioPlaying(true);
-      
-      audioRef.current.onended = () => {
-        setCurrentlyPlaying(null);
-        setIsAudioPlaying(false);
-        URL.revokeObjectURL(url);
-      };
-
-      await audioRef.current.play();
-      setCurrentlyPlaying(index);
-    } catch (err) {
-      console.error('Speech generation error:', err);
-      setError(language === 'es' 
-        ? 'Error al generar el audio. Por favor, intente de nuevo.'
-        : 'Failed to generate speech. Please try again.');
-      setCurrentlyPlaying(null);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  // Card text content
-  const cardContent = {
-    en: {
-      title: "Constitutional Rights Card",
-      rights: [
-        "I do not wish to speak with you, answer your questions, or sign or hand you any documents based on my 5th Amendment rights under the United States Constitution.",
-        "I do not give you permission to enter my home based on my 4th Amendment rights under the United States Constitution unless you have a warrant to enter, signed by a judge or magistrate with my name on it that you slide under the door.",
-        "I do not give you permission to search any of my belongings based on my 4th Amendment rights.",
-        "I choose to exercise my constitutional rights.",
-        "These cards are available to citizens and noncitizens alike."
-      ]
-    },
-    es: {
-      title: "Tarjeta de Derechos Constitucionales",
-      rights: [
-        "NO CONTESTE NINGUNA PREGUNTA de un agente de inmigración si él trata de hablar con usted. Usted tiene el derecho de mantenerse callado.",
-        "NO ABRA LA PUERTA si un agente de inmigración está tocando la puerta.",
-        "NO FIRME NADA sin antes hablar con un abogado. Usted tiene el derecho de hablar con un abogado.",
-        "Si usted está afuera de su casa, pregunte al agente si es libre para irse y si dice que sí, váyase con tranquilidad.",
-        "ENTREGUE ESTA TARJETA AL AGENTE. Si usted está dentro de su casa, muestre la tarjeta por la ventana o pásela debajo de la puerta."
-      ]
-    },
-    zh: {
-      title: "宪法权利卡",
-      rights: [
-        "根据美国宪法第五修正案赋予我的权利，我不希望与您交谈，回答您的问题，或签署或交给您任何文件。",
-        "根据美国宪法第四修正案赋予我的权利，除非您有由法官或治安法官签署的、写有我名字的搜查令并将其从门下递进来，否则我不允许您进入我的家。",
-        "根据我的第四修正案权利，我不允许您搜查我的任何物品。",
-        "我选择行使我的宪法权利。",
-        "这些卡片适用于公民和非公民。"
-      ]
-    }
-  };
-
   return (
-    <div className={`bg-gray-900 ${language === 'ar' ? 'rtl' : 'ltr'}`}>
+    <div className={`bg-gray-900 ${language === 'ar' ? 'rtl' : 'ltr'} h-full overflow-y-auto`}>
       <div className="max-w-2xl mx-auto px-6 py-8 space-y-8">
         <div className="bg-[#660000] backdrop-blur-sm rounded-lg p-6">
           <div className="flex flex-col gap-2">
             <h1 className="text-2xl font-bold text-white text-center">
-              {t.redCard?.title || translations.en.redCard.title}
+              {language === 'es' ? 'Tarjeta Roja Digital' :
+               language === 'zh' ? '数字红卡' :
+               language === 'hi' ? 'डिजिटल रेड कार्ड' :
+               language === 'ar' ? 'بطاقة حمراء رقمية' :
+               t.redCard?.title || translations.en.redCard.title}
             </h1>
             <button
               onClick={isRecording ? stopRecording : startRecording}
@@ -479,7 +393,11 @@ const RedCard = ({ language }: RedCardProps) => {
                   <span className="whitespace-nowrap">
                     {isSaving ? 
                       (t.redCard?.saving || translations.en.redCard.saving) :
-                      (t.redCard?.startRecording || translations.en.redCard.startRecording)}
+                      (language === 'es' ? 'Haz clic para comenzar a grabar' :
+                       language === 'zh' ? '点击开始录音' :
+                       language === 'hi' ? 'रिकॉर्डिंग शुरू करने के लिए क्लिक करें' :
+                       language === 'ar' ? 'انقر لبدء التسجيل' :
+                       t.redCard?.startRecording || translations.en.redCard.startRecording)}
                   </span>
                 </>
               )}
@@ -492,23 +410,15 @@ const RedCard = ({ language }: RedCardProps) => {
               <span>{error}</span>
             </div>
           )}
-
         </div>
 
-        {error && (
-          <div className="bg-red-900/50 text-red-100 px-4 py-3 rounded-lg mb-4 flex items-center gap-2">
-            <AlertTriangle size={20} className="flex-shrink-0" />
-            <span>{error}</span>
-          </div>
-        )}
-        
         <div className="bg-[#660000] backdrop-blur-sm rounded-lg p-6">
           <h2 className="text-xl font-bold text-white mb-6">
             {language === 'hi' ? 'पूर्व-रिकॉर्ड की गई प्रतिक्रियाएँ' :
              language === 'es' ? 'Respuestas Pregrabadas' :
              language === 'zh' ? '预录制回应' :
              language === 'ar' ? 'ردود مسجلة مسبقًا' :
-             'Pre-recorded Responses'}
+             t.redCard?.preRecorded || 'Pre-recorded Responses'}
           </h2>
           <AudioPlayer
             speakerMode={true} 
@@ -524,7 +434,8 @@ const RedCard = ({ language }: RedCardProps) => {
               {language === 'hi' ? 'सहेजी गई रिकॉर्डिंग' :
                language === 'es' ? 'Grabaciones Guardadas' : 
                language === 'zh' ? '已保存的录音' : 
-               'Saved Recordings'}
+               language === 'ar' ? 'التسجيلات المحفوظة' :
+               t.redCard?.savedRecordings || 'Saved Recordings'}
             </h2>
             
             <div className="space-y-4">
@@ -568,13 +479,14 @@ const RedCard = ({ language }: RedCardProps) => {
                         title={language === 'es' ? 'Copiar Enlace' : 
                                language === 'zh' ? '复制链接' : 
                                language === 'hi' ? 'लिंक कॉपी करें' : 
-                               'Copy Link'}
+                               language === 'ar' ? 'نسخ الرابط' :
+                               t.redCard?.copyLink || 'Copy Link'}
                       >
                         {language === 'es' ? 'Copiar' : 
                          language === 'zh' ? '复制' : 
                          language === 'hi' ? 'कॉपी करें' : 
                          language === 'ar' ? 'نسخ' :
-                         'Copy Link'}
+                         t.redCard?.copy || 'Copy'}
                       </button>
                     </div>
                   </div>

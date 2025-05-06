@@ -147,7 +147,7 @@ const Lupe = ({ language = 'en' }: LupeProps) => {
   }, []);
 
   return (
-    <div className={`bg-gray-900 px-4 ${language === 'ar' ? 'rtl' : 'ltr'}`}>
+    <div className={`bg-gray-900 px-4 ${language === 'ar' ? 'rtl' : 'ltr'} h-full overflow-y-auto`}>
       <div className="max-w-2xl mx-auto pt-4 text-left">
         <div className="text-gray-300 mb-4">
           <p>

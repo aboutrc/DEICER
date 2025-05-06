@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/logo.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     
     <!-- Preload critical assets -->
     <link rel="preload" href="/deicerlogo.png" as="image" />
@@ -17,6 +19,14 @@
         background-color: rgb(17 24 39);
         color: #e5e7eb;
         height: 100%;
+        width: 100%;
+      }
+      
+      #root {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
       }
       .min-h-screen {
         min-height: 100vh;
@@ -48,6 +58,20 @@
       .border-gray-800 {
         border-color: rgb(31 41 55);
       }
+      
+      /* iOS Safari fix */
+      @supports (-webkit-touch-callout: none) {
+        body, html {
+          height: 100%;
+          min-height: 100%;
+          background-color: rgb(17 24 39);
+        }
+        
+        #root {
+          height: 100%;
+          overflow: hidden;
+        }
+      }
     </style>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -71,8 +95,14 @@
     <meta http-equiv="Expires" content="0" />
     <meta http-equiv="Clear-Site-Data" content="cache, storage, executionContexts" />
     <title>DEICER : DEI Community Engagement Reporter</title>
+    <style>
+      /* Fix for iOS scrolling */
+      main {
+        -webkit-overflow-scrolling: touch;
+      }
+    </style>
   </head>
-  <body class="min-h-screen flex flex-col">
+  <body class="min-h-screen flex flex-col overflow-hidden">
     <div id="root"></div>
     <div id="overlay-root"></div>
     <script type="module" src="/src/main.tsx" defer></script>

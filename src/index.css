@@ -12,8 +12,10 @@ html, body {
 
 body {
   position: relative;
-  margin: 0;
-  padding: 0;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
 }
 
 #root {
@@ -140,19 +142,58 @@ body {
   animation: fade-in 0.3s ease-out forwards;
 }
 
-@keyframes fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+/* Alert box positioning */
+.map-alert-box {
+  position: absolute !important;
+  top: 20% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  z-index: 1010 !important;
+  max-width: 90% !important;
+  width: 450px !important;
+}
+
+/* Mobile-specific styles */
+@media (max-width: 768px) {
+  .map-alert-box {
+    left: 50% !important; /* Center horizontally */
+    top: 30% !important;
+    width: 90% !important;
+    max-width: 350px !important;
   }
 }
 
-.animate-fade-in {
-  animation: fade-in 0.3s ease-out forwards;
+/* iOS Safari specific fixes */
+@supports (-webkit-touch-callout: none) {
+  .map-alert-box {
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 85% !important;
+    max-width: 320px !important;
+  }
+}
+
+/* Alert message styling */
+.alert-message {
+  max-width: 90%;
+  width: 450px;
+  word-break: break-word;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.alert-message-text {
+  flex: 1;
+  white-space: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.alert-message-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
 }
 
 /* TipTap Editor Styles */
@@ -300,14 +341,14 @@ body {
 
 /* Fixed header and menu styles */
 .content-wrapper {
-  padding-top: 6rem; /* Space for header + menu on mobile */
-  padding-bottom: 5rem; /* Space for footer */
-  min-height: calc(100vh - 8rem); /* Full height minus header/menu/footer */
+  padding-top: 6rem;
+  padding-bottom: 5rem;
+  min-height: calc(100vh - 8rem);
 }
 
 @media (min-width: 768px) {
   .content-wrapper {
-    padding-top: 6.5rem; /* More space for larger header on desktop */
+    padding-top: 7.5rem; /* More space for larger header on desktop */
   }
 }
 
@@ -334,6 +375,26 @@ body {
 
 .marker-archived:hover {
   opacity: 0.8;
+}
+
+/* Marker highlight animation */
+@keyframes pulse-highlight {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.marker-highlight {
+  animation: pulse-highlight 1s ease-in-out 3;
 }
 
 /* ElevenLabs Widget Global Styles */
@@ -600,6 +661,7 @@ elevenlabs-convai {
 
 /* Mobile-specific styles */
 @supports (-webkit-touch-callout: none) {
+  /* Alert message mobile styling */
   .scrollbar-hide {
     -webkit-overflow-scrolling: touch;
     overflow-y: auto;
@@ -618,26 +680,26 @@ elevenlabs-convai {
   .maplibregl-ctrl-bottom-left,
   .maplibregl-ctrl-bottom-right {
     position: absolute !important;
-    margin: 10px !important;
+    margin: 12px !important;
     z-index: 100 !important;
   }
 
   .maplibregl-ctrl-group {
     margin: 0 !important;
-    background-color: white !important;
-    border: 1px solid rgba(0, 0, 0, 0.1) !important;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    background-color: rgba(0, 0, 0, 0.6) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
   }
 
   .maplibregl-ctrl button {
-    width: 40px !important;
-    height: 40px !important;
-    color: #000 !important;
+    width: 44px !important;
+    height: 44px !important;
+    color: #fff !important;
   }
 
   .maplibregl-ctrl-icon {
     background-size: 20px !important;
-    filter: invert(1) !important;
+    filter: invert(0) !important;
   }
 
   /* 3D control button styling */
@@ -645,23 +707,112 @@ elevenlabs-convai {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    width: 30px !important;
-    height: 30px !important;
+    width: 44px !important;
+    height: 44px !important;
     font-weight: bold !important;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
   }
   
   /* Make popups responsive on mobile */
   .marker-popup .maplibregl-popup-content {
-    min-width: 300px !important;
+    min-width: 250px !important;
     max-width: 90vw !important;
+    
+    /* Fix for iOS popup rendering */
+    transform: translateZ(0) !important;
+    -webkit-transform: translateZ(0) !important;
+  }
+  
+  /* Fix for map alert box on mobile */
+  .map-alert-box {
+    top: 25% !important;
+    width: 85% !important;
+    max-width: 320px !important;
+  }
+  
+  /* Improve touch targets for alert buttons */
+  .alert-message-actions button {
+    min-width: 44px !important;
+    min-height: 44px !important;
   }
 }
 
 /* iOS-specific fixes */
 @supports (-webkit-touch-callout: none) {
   .maplibregl-ctrl-group {
-    background-color: white !important;
+    background-color: rgba(0, 0, 0, 0.6);
+  }
+  
+  /* Fix for blue screen on iOS Safari/Chrome */
+  body, html, #root {
+    background-color: rgb(17 24 39);
+    min-height: 100%;
+    height: 100%;
+    overflow: auto;
+  }
+  
+  .maplibregl-canvas-container {
+    width: 100%;
+    height: 100%;
+  }
+  
+  /* Fix for map rendering on iOS */
+  .maplibregl-map {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+  }
+  
+  /* iOS-specific alert styling */
+  button {
+    -webkit-appearance: none;
+    appearance: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Ensure alerts are properly positioned on iOS */
+  .map-alert-box {
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 85% !important;
+    max-width: 320px !important;
+    top: 25% !important;
+  }
+  
+  /* Ensure buttons are tappable on iOS */
+  button[title="Show me"],
+  button[title="Close"] {
+    min-width: 44px;
+    min-height: 44px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Fix iOS map touch handling */
+  .maplibregl-canvas-container.maplibregl-interactive {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Fix iOS momentum scrolling */
+  .maplibregl-popup-content {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Fix for iOS Safari viewport height issues */
+  .min-h-screen {
+    min-height: -webkit-fill-available;
+  }
+  
+  /* Fix for iOS Safari map container */
+  .h-screen {
+    height: -webkit-fill-available;
+  }
+  
+  /* Fix for iOS Safari blue screen */
+  .bg-gray-900 {
+    background-color: rgb(17 24 39);
   }
 }
 
@@ -735,26 +886,26 @@ elevenlabs-convai {
 
 /* Auth UI Styles */
 .auth-container {
-  color: #e5e7eb !important;
+  color: #e5e7eb;
 }
 
 .auth-container a {
-  color: #60a5fa !important;
+  color: #60a5fa;
 }
 
 .auth-container button {
-  width: 100% !important;
-  padding: 0.75rem 1rem !important;
-  margin-top: 1rem !important;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  margin-top: 1rem;
 }
 
 .auth-container input {
-  width: 100% !important;
-  padding: 0.75rem 1rem !important;
-  margin-top: 0.5rem !important;
-  background-color: #1f2937 !important;
-  border: 1px solid #374151 !important;
-  color: white !important;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  margin-top: 0.5rem;
+  background-color: #1f2937;
+  border: 1px solid #374151;
+  color: white;
 }
 
 /* Stripe Elements custom styling */
@@ -773,13 +924,13 @@ elevenlabs-convai {
 }
 
 .StripeElement--webkit-autofill {
-  background-color: transparent !important;
+  background-color: transparent;
 }
 
 /* Fix for Stripe iframe */
 .__PrivateStripeElement iframe {
-  opacity: 1 !important;
-  height: 24px !important;
+  opacity: 1;
+  height: 24px;
 }
 
 /* Fix for Stripe card element */

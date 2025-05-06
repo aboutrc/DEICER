@@ -267,7 +267,7 @@ const Protect: React.FC<ProtectProps> = ({ language = 'en' }) => {
 
   return (
     <>
-      <div className={`min-h-screen bg-gray-900 ${language === 'ar' ? 'rtl' : 'ltr'}`}>
+      <div className={`min-h-screen bg-gray-900 ${language === 'ar' ? 'rtl' : 'ltr'} h-full overflow-y-auto`}>
         <div className="max-w-2xl mx-auto px-6 py-8 space-y-8">
           {/* API Configuration Error */}
           {!isApiConfigured && (

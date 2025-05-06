@@ -64,6 +64,16 @@ const AudioPlayer = ({
       }
 
       audioRef.current.src = `/audio/${audioFileName}`;
+      
+      // Set audio to play through speakerphone if supported
+      if (speakerMode && audioRef.current.setSinkId) {
+        try {
+          await audioRef.current.setSinkId('default');
+          console.log('Audio output set to speakerphone');
+        } catch (err) {
+          console.warn('setSinkId not supported or failed:', err);
+        }
+      }
 
       audioRef.current.onended = () => {
         setCurrentPlaying(null);
@@ -83,19 +93,12 @@ const AudioPlayer = ({
     }
   };
 
-  const toggleSpeakerMode = () => {
-    setIsSpeakerMode(!isSpeakerMode);
-    if (audioRef.current) {
-      audioRef.current.volume = !isSpeakerMode ? 1.0 : 0.3;
-    }
-  };
-
   if (!isApiConfigured) {
     return (
       <div className="w-full max-w-2xl mt-8">
         <div className="bg-red-900/50 text-red-100 px-4 py-3 rounded-lg mb-4 flex items-center gap-2">
           <AlertTriangle size={20} className="flex-shrink-0" />
-          <span>ElevenLabs API is not configured. Please check your environment variables.</span>
+          <span>Audio playback is not configured. Please check your device settings.</span>
         </div>
       </div>
     );

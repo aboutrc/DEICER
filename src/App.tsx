@@ -5,7 +5,8 @@ import AlertSystem from './components/AlertSystem';
 
 // Lazy load components
 const MapView = lazy(() => import('./components/Map'));
-const RedCard = lazy(() => import('./components/RedCard'));
+const MapDebug = lazy(() => import('./components/MapDebug'));
+const RedCard = lazy(() => import('./components/RedCard')); 
 const Protect = lazy(() => import('./components/Protect'));
 const Info = lazy(() => import('./components/Info'));
 const InfoEditor = lazy(() => import('./components/InfoEditor'));
@@ -18,7 +19,6 @@ const Signup = lazy(() => import('./components/Signup'));
 const UserProfile = lazy(() => import('./components/UserProfile'));
 
 import type { University } from './lib/universities';
-import { translations } from './translations';
 import { isSupabaseConfigured } from './lib/supabase';
 
 // Loading component
@@ -35,7 +35,12 @@ function App() {
       ? window.location.search.split('lang=')[1].split('&')[0] 
       : localStorage.getItem('preferredLanguage')) as 'en' | 'es' | 'zh' | 'hi' | 'ar' || 'en'
   );
-  const [selectedUniversity, setSelectedUniversity] = React.useState<University | null>(null);
+  
+  // Store university in sessionStorage to persist across page refreshes
+  const [selectedUniversity, setSelectedUniversity] = React.useState<University | null>(() => {
+    const stored = sessionStorage.getItem('selectedUniversity');
+    return stored ? JSON.parse(stored) : null;
+  });
 
   // Initialize Supabase connection on app load
   React.useEffect(() => {
@@ -62,6 +67,8 @@ function App() {
 
   const handleUniversitySelect = (university: University) => {
     setSelectedUniversity(university);
+    // Store in sessionStorage to persist across page refreshes
+    sessionStorage.setItem('selectedUniversity', JSON.stringify(university));
     console.log(`Selected university: ${university.university}`);
   };
 
@@ -79,7 +86,7 @@ function App() {
               <Suspense fallback={<LoadingFallback />}>
                 <MapView 
                   language={language} 
-                  selectedUniversity={selectedUniversity}
+                  selectedUniversity={selectedUniversity} 
                   onUniversitySelect={handleUniversitySelect}
                 />
               </Suspense>
@@ -89,6 +96,13 @@ function App() {
             <Layout language={language} onLanguageChange={handleLanguageChange}>
               <Suspense fallback={<LoadingFallback />}>
                 <RedCard language={language} />
+              </Suspense>
+            </Layout>
+          } />
+          <Route path="/mapdebug" element={
+            <Layout language={language} onLanguageChange={handleLanguageChange}>
+              <Suspense fallback={<LoadingFallback />}>
+                <MapDebug />
               </Suspense>
             </Layout>
           } />
